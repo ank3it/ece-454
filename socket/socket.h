@@ -1,62 +1,58 @@
-/*
- * File: socket.h
- * Date: May, 18/2012
- * Group: 14
- * Description: Header file for Socket, ServerSocket and ClientSocket
- * classes.
- */
+// File: socket.h
+// Date: May, 18/2012
+// Group: 14
+// Description: Header file for Socket, ServerSocket and ClientSocket
+// classes.
 
 #ifndef _SOCKET_H_
 #define _SOCKET_H_
 
 #include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 
-using namespace std;
+// Constants
+const int BUFFER_SIZE = 256;
 
+// Represents a single socket. Stores the necessary socket file descriptor and 
+// provides function to send and receive data via the socket
 class Socket {
 	public:
 		Socket();
 		Socket(int);
+		Socket(std::string, int);
 		virtual ~Socket();
 
-		int sendData(string, int);
+		int sendData(std::string, int);
 		char* receiveData();
 
 	protected:
 		int sockfd;
 		int portNumber;
-		char buffer[256];
+		char buffer[BUFFER_SIZE];
+		struct sockaddr_in serverAddress;
+	
+	private:
+		struct hostent* server;
 };
 
+// Socket which allows multiple clients to connect. Creates new Socket for each
+// client and spawns a new thread
 class ServerSocket : public Socket {
 	public:
 		ServerSocket(unsigned short);
 		virtual ~ServerSocket();
 
-		void acceptConnection();
-		int sendData(string, int);
-		char* receiveData();
+		Socket acceptConnection();
 
 	private:
-		struct sockaddr_in serverAddr;
 		struct sockaddr_in clientAddr;
-		Socket* connectedSocket;
 };
 
-class ClientSocket : public Socket {
-	public:
-		ClientSocket(string, unsigned short);
-	private:
-		struct sockaddr_in serverAddr;
-		struct hostent* server;
-};
-
-#endif /* _SOCKET_H_ */
+#endif // _SOCKET_H_

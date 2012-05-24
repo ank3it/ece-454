@@ -1,18 +1,40 @@
-#include "socket.cpp"
+// Test code for socket IO with threads
 
-using namespace std;
+#include "socket.h"
+#include <pthread.h>
+
+void* receiveStuff(void* params) {
+	Socket* socket = (Socket *)params;
+
+	std::string receivedMsg;
+	while (receivedMsg.compare("exit") != 0) {
+		receivedMsg = socket->receiveData();
+		std::cout << "Client: " << receivedMsg << std::endl;
+	}
+
+	return NULL;
+}
 
 int main() {
-	cout << "Hello from server" << endl;
+	std::cout << "Hello from server" << std::endl;
 
-	ServerSocket* s = new ServerSocket(8080);
-	cout << "ServerSocket created" << endl;
+	pthread_t thread_id1;
 
-	s->acceptConnection();
+	ServerSocket serverSocket(8080);
+	std::cout << "ServerSocket created" << std::endl;
 
-	cout << s->receiveData() << endl;
+	Socket clientSocket = serverSocket.acceptConnection();
 
-	delete s;
+	pthread_create(&thread_id1, NULL, &receiveStuff, &clientSocket);
+
+	std::string msg;
+	while (msg.compare("exit") != 0) {
+		getline(std::cin, msg);
+		clientSocket.sendData(msg, msg.length());
+	}
+
+	pthread_cancel(thread_id1);
+	pthread_join(thread_id1, NULL);
 
 	return 0;
 }
