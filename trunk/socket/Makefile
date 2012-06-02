@@ -14,11 +14,11 @@ all: server.out client.out
 
 # Server executable
 server.out: $(S_OBJS)
-	$(CXX) $(CFLAGS) $(LDFLAGS) $(LIBS) $(S_OBJS) -o server.out
+	$(CXX) $(CFLAGS) $(LDFLAGS) -o server.out $(S_OBJS) $(LIBS)
 
 # Client executable
 client.out: $(C_OBJS)
-	$(CXX) $(CFLAGS) $(LIBS) $(LDFLAGS) $(C_OBJS) -o client.out 
+	$(CXX) $(CFLAGS) $(LDFLAGS) -o client.out $(C_OBJS) $(LIBS)
 
 server.o: socket.h
 client.o: socket.h
