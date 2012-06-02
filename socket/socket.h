@@ -1,8 +1,9 @@
-// File: socket.h
-// Date: May, 18/2012
-// Group: 14
-// Description: Header file for Socket, ServerSocket and ClientSocket
-// classes.
+/*
+ * File: socket.h
+ * Date: May, 18/2012
+ * Group: 14
+ * Description: Header file for Socket and ServerSocket.
+ */
 
 #ifndef _SOCKET_H_
 #define _SOCKET_H_
@@ -17,11 +18,13 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-// Constants
+/* Constants */
 const int BUFFER_SIZE = 256;
 
-// Represents a single socket. Stores the necessary socket file descriptor and 
-// provides function to send and receive data via the socket
+/*
+ * Represents a single socket. Stores the necessary socket file descriptor and 
+ * provides function to send and receive data via the socket
+ */
 class Socket {
 	public:
 		Socket();
@@ -42,12 +45,14 @@ class Socket {
 		struct hostent* server;
 };
 
-// Socket which allows multiple clients to connect. Creates new Socket for each
-// client and spawns a new thread
+/*
+ * Socket which allows multiple clients to connect. Creates new Socket for each
+ * client and spawns a new thread
+ */
 class ServerSocket : public Socket {
 	public:
 		ServerSocket(unsigned short);
-		virtual ~ServerSocket();
+		~ServerSocket();
 
 		Socket acceptConnection();
 
@@ -55,4 +60,4 @@ class ServerSocket : public Socket {
 		struct sockaddr_in clientAddr;
 };
 
-#endif // _SOCKET_H_
+#endif  /* _SOCKET_H_ */
