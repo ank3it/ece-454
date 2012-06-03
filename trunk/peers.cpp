@@ -2,13 +2,13 @@
  * File: peers.cpp
  * Date: Jun. 1/2012
  * Group: 14
- * Description: Implementatino for the peers class. This class is a container
+ * Description: Implementation for the peers class. This class is a container
  * for all the peers that are in a network.
  */
 
 #include <fstream>
 #include <cstdlib>
-#include <iostream>
+#include "return_codes.h"
 #include "peers.h"
 
 Peers::Peers() : _numPeers(0) {
@@ -31,11 +31,9 @@ int Peers::initialize(std::string peersFile) {
 
 	if (file.is_open()) {
 		while (file >> lineItem) {
-			// Read file and create Peer objects for each entry
-
 			// Stop after maxPeers and issue warning
 			if (_numPeers >= maxPeers)
-				return returnCodes::errTooManyPeers;
+				return returnCodes::WARNING_TOO_MANY_PEERS;
 
 			ipAddress = lineItem;
 
@@ -52,7 +50,7 @@ int Peers::initialize(std::string peersFile) {
 		return -1;
 	}
 
-	return returnCodes::errOK;
+	return returnCodes::OK;
 }
 
 Peer Peers::operator ()(int i) {

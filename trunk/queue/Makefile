@@ -1,25 +1,20 @@
 # Makefile
-# May, 22/2012
+# May, 19/2012
 
 CXX=g++
 CFLAGS=-Wall -g
 LD=g++
 LDFLAGS=
-LIBS=
+LIBS=-lpthread
 
-OBJS= test.o local_peer.o peer.o peers.o status.o util.o
+OBJS= test.o
 
 all: a.out
 
 a.out: $(OBJS)
 	$(CXX) $(CFLAGS) $(LDFLAGS) $(LIBS) $(OBJS)
 
-test.o:
-local_peer.o:
-peer.o:
-peers.o:
-status.o:
-util.o:
+test.o: concurrent_queue.h
 
 .PHONY: clean
 clean:

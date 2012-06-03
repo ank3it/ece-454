@@ -52,7 +52,6 @@ class Socket {
 class ServerSocket : public Socket {
 	public:
 		ServerSocket(unsigned short);
-		~ServerSocket();
 
 		Socket acceptConnection();
 

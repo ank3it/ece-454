@@ -11,14 +11,15 @@
 #include <string>
 
 const int chunkSize = 65536;
+const std::string filesDir = "files";
 
+// Forward declarations
 class Status;
 class Peers;
 
 class LocalPeer {
 	public:
 		LocalPeer();
-		~LocalPeer();
 
 		// Required interface
 		int insert(std::string filename);
@@ -27,12 +28,7 @@ class LocalPeer {
 		int leave();
 		// End of required interface
 
-		void setIpAddress(std::string const ipAddress) { _ipAddress = ipAddress; }
-		void setPortNumber(int const portNumber) { _portNumber = portNumber; }
 	private:
-		std::string _ipAddress;
-		int _portNumber;
-		enum State { connected, disconnected, unknown } _state;
 		Peers* _peers;
 };
 
