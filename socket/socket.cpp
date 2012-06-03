@@ -1,15 +1,19 @@
-// File: socket.cpp
-// Date: May, 18/2012
-// Description: Contains implementations of Socket and ServerSocket classes
-//
-// TODO:
-// [ ] Modify to accept binary data instead of strings
+/*
+ * File: socket.cpp
+ * Date: May, 18/2012
+ * Description: Contains implementations of Socket and ServerSocket classes
+ *
+ * TODO:
+ * [ ] Modify to accept binary data instead of strings
+ */
 
 #include "socket.h"
 
-// ---------- Socket ----------
+/* ---------- Socket ---------- */
 
-// Socket constructor. Calls socket() to get a socket file descriptor.
+/* 
+ * Socket constructor. Calls socket() to get a socket file descriptor.
+ */
 Socket::Socket() {
 	std::cout << "Creating Socket" << std::endl;
 
@@ -21,9 +25,11 @@ Socket::Socket() {
 	}
 }
 
-// Socket constructor. Creates a new socket based on an exiting socket file 
-// descriptor
-// fd: File descriptor of an existing socket
+/*
+ * Socket constructor. Creates a new socket based on an exiting socket file 
+ * descriptor
+ * fd: File descriptor of an existing socket
+ */
 Socket::Socket(int fd): sockfd(fd) {
 	if (sockfd < 0) {
 		perror("Invalid socket file descriptor");
@@ -31,10 +37,12 @@ Socket::Socket(int fd): sockfd(fd) {
 	}
 }
 
-// Socket constructor. Creates a socket then connects to a server using 
-// the created socket.
-// hostname: Name of the server
-// portNumber: Port number of the server
+/*
+ * Socket constructor. Creates a socket then connects to a server using 
+ * the created socket.
+ * hostname: Name of the server
+ * portNumber: Port number of the server
+ */
 Socket::Socket(std::string hostname, int portNumber) {
 	std::cout << "Creating socket and connecting to server" << std::endl;
 
@@ -65,14 +73,18 @@ Socket::Socket(std::string hostname, int portNumber) {
 	std::cout << "Connected to server" << std::endl;	
 }
 
-// Socket desctructor. Closes the file descriptor held by this object
+/*
+ * Socket desctructor. Closes the file descriptor held by this object
+ */
 Socket::~Socket() {
 	close(sockfd);
 }
 
-// Sends the given data via connection-oriented socket
-// msg: Message to be sent
-// length: Length of the message in number of bytes
+/*
+ * Sends the given data via connection-oriented socket
+ * msg: Message to be sent
+ * length: Length of the message in number of bytes
+ */
 int Socket::sendData(std::string msg, int length) {
 	int n = 0;
 
@@ -86,7 +98,9 @@ int Socket::sendData(std::string msg, int length) {
 	return n;
 }
 
-// Receives data from a connection-oriented socket
+/*
+ * Receives data from a connection-oriented socket
+ */
 char* Socket::receiveData() {
 	int n = 0;
 
@@ -99,10 +113,12 @@ char* Socket::receiveData() {
 	return buffer;
 }
 
-// ---------- ServerSocket ----------
+/* ---------- ServerSocket ---------- */
 
-// ServerSocket constructor. Creates a socket, binds it to the given
-// portNumber and calls listen() to mark it as a passive socket
+/*
+ * ServerSocket constructor. Creates a socket, binds it to the given
+ * portNumber and calls listen() to mark it as a passive socket
+ */
 ServerSocket::ServerSocket(unsigned short portNumber) {
 	std::cout << "Creating ServerSocket" << std::endl;
 
@@ -124,12 +140,9 @@ ServerSocket::ServerSocket(unsigned short portNumber) {
 	listen(sockfd, 5);
 }
 
-// ServerSocket desctructor.
-ServerSocket::~ServerSocket() {
-	// Cleaup and delete things
-}
-
-// Accepts a connection request from a client. Uses the blocking accept() call
+/*
+ * Accepts a connection request from a client. Uses the blocking accept() call
+ */
 Socket ServerSocket::acceptConnection() {
 	socklen_t clientLength = sizeof clientAddr;
 	int newSockfd = accept(sockfd, 
@@ -139,4 +152,3 @@ Socket ServerSocket::acceptConnection() {
 	std::cout << "Accepted connection from client" << std::endl;
 	return Socket(newSockfd);
 }
-

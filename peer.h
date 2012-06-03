@@ -8,13 +8,14 @@
 #ifndef _PEER_H_
 #define _PEER_H_
 
+#include <string>
+
 // Forward declarations
 class Status;
 
 class Peer {
 	public:
 		Peer();
-		~Peer();
 
 		void setIpAddress(std::string const ipAddress) { _ipAddress = ipAddress; }
 		void setPortNumber(int const portNumber) { _portNumber = portNumber; }

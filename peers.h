@@ -12,7 +12,6 @@
 #define _PEERS_H_
 
 #include <string>
-#include "return_codes.h"
 #include "peer.h"
 
 const int maxPeers  = 6;
