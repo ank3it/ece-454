@@ -9,17 +9,19 @@
 #define _LOCAL_PEER_H_
 
 #include <string>
+#include "peers.h"
 
 const int chunkSize = 65536;
+const std::string peersList = "peers.lst";
 const std::string filesDir = "files";
 
 // Forward declarations
 class Status;
-class Peers;
 
 class LocalPeer {
 	public:
 		LocalPeer();
+		~LocalPeer();
 
 		// Required interface
 		int insert(std::string filename);
@@ -29,7 +31,7 @@ class LocalPeer {
 		// End of required interface
 
 	private:
-		Peers* _peers;
+		Peers _peers;
 };
 
 #endif  /* _LOCAL_PEER_H_ */

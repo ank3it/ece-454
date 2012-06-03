@@ -8,30 +8,24 @@
 #ifndef _SOCKET_H_
 #define _SOCKET_H_
 
-#include <iostream>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <netdb.h>
+#include <string>
 
 /* Constants */
 const int BUFFER_SIZE = 256;
 
 /*
  * Represents a single socket. Stores the necessary socket file descriptor and 
- * provides function to send and receive data via the socket
+ * provides functions to send and receive data via the socket.
  */
 class Socket {
 	public:
 		Socket();
 		Socket(int);
 		Socket(std::string, int);
-		virtual ~Socket();
+		~Socket();
 
+		bool connectTo(std::string, int);
 		int sendData(std::string, int);
 		char* receiveData();
 
@@ -46,8 +40,7 @@ class Socket {
 };
 
 /*
- * Socket which allows multiple clients to connect. Creates new Socket for each
- * client and spawns a new thread
+ * Socket which allows clients to connect to it.
  */
 class ServerSocket : public Socket {
 	public:

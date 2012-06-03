@@ -92,8 +92,8 @@ void ConcurrentQueue<Object>::pop(Object& result) {
 }
 
 /*
- * Tries to pop an element off the queue. If the queue is empty than NULL is
- * is returned.
+ * Tries to pop an element off the queue. If able to pop off the queue then 
+ * returns true.
  *
  * result: A reference to an object in which the popped element will be returned
  */

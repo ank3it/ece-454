@@ -9,20 +9,33 @@
 #define _PEER_H_
 
 #include <string>
+#include "thread.h"
+#include "queue/concurrent_queue.h"
+#include "file_chunk.h"
+#include "socket/socket.h"
 
-// Forward declarations
-class Status;
-
-class Peer {
+class Peer : public Thread {
 	public:
 		Peer();
+		~Peer();
 
+		enum State { connected, disconnected, unknown };
+
+		State getState() const { return _state; }
 		void setIpAddress(std::string const ipAddress) { _ipAddress = ipAddress; }
 		void setPortNumber(int const portNumber) { _portNumber = portNumber; }
+		void setState(State newState) { _state = newState; }
+		bool connect();
+		void run();
+
 	private:
 		std::string _ipAddress;
 		int _portNumber;
-		enum State { connected, disconnected, unknown } _state;
+		enum State _state;
+		pthread_t _threadId;
+		ConcurrentQueue<FileChunk> _receiveQueue;
+		ConcurrentQueue<FileChunk> _sendQueue;
+		Socket socket;
 };
 
 #endif  /* _PEER_H_ */

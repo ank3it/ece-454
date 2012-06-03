@@ -4,8 +4,7 @@
 CXX=g++
 CFLAGS=-Wall -g
 LD=g++
-LDFLAGS=
-LIBS=-lpthread
+LDFLAGS=-pthread
 
 S_OBJS=socket.o server.o
 C_OBJS=socket.o client.o
@@ -14,11 +13,11 @@ all: server.out client.out
 
 # Server executable
 server.out: $(S_OBJS)
-	$(CXX) $(CFLAGS) $(LDFLAGS) -o server.out $(S_OBJS) $(LIBS)
+	$(CXX) $(CFLAGS) $(LDFLAGS) -o server.out $(S_OBJS)
 
 # Client executable
 client.out: $(C_OBJS)
-	$(CXX) $(CFLAGS) $(LDFLAGS) -o client.out $(C_OBJS) $(LIBS)
+	$(CXX) $(CFLAGS) $(LDFLAGS) -o client.out $(C_OBJS)
 
 server.o: socket.h
 client.o: socket.h
