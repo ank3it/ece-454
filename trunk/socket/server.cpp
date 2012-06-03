@@ -2,6 +2,7 @@
 
 #include "socket.h"
 #include <pthread.h>
+#include <iostream>
 
 void* receiveStuff(void* params) {
 	Socket* socket = (Socket *)params;

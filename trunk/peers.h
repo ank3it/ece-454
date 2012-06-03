@@ -29,9 +29,8 @@ class Peers {
 		// incorrectly formatted. After execution of this method, the _peers 
 		// should be present.
 		int initialize(std::string peersFile);
-		Peer operator()(int i);
-		
-		// You will likely want to add methods such as visit()
+		Peer& operator()(int i);		
+		int getNumPeers() const { return _numPeers; }
 		
 	private:
 		int _numPeers;

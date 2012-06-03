@@ -14,9 +14,19 @@
 #include "local_peer.h"
 #include "return_codes.h"
 #include "util.h"
+#include <iostream> // remove
 
+/*
+ * Constructor. Creates a new Peers object
+ */
 LocalPeer::LocalPeer() {
+	std::cout << "LocalPeer constructor" << std::endl;
 	// Empty constructor
+}
+
+// remove
+LocalPeer::~LocalPeer() {
+	std::cout << "LocalPeer destructor" << std::endl;
 }
 
 /*
@@ -67,8 +77,25 @@ int LocalPeer::query(Status& status) {
 	return 0;
 }
 
+/*
+ * Attempts to join the set of peers. Pushes any local files out to the peers
+ * and also receives any files that the peers might have that is not present
+ * locally.
+ */
 int LocalPeer::join() {
-	return 0;
+	int peersConnected = 0;
+	_peers.initialize(peersList);
+
+	for (int i = 0; i < _peers.getNumPeers(); i++) {
+		if (_peers(i).connect())
+			peersConnected++;
+	}
+
+	if (peersConnected < _peers.getNumPeers()) {
+		return returnCodes::WARNING_PEER_NOT_FOUND;
+	}
+
+	return returnCodes::OK;
 }
 
 int LocalPeer::leave() {

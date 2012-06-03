@@ -4,19 +4,25 @@
  * Description: Contains implementations of Socket and ServerSocket classes
  *
  * TODO:
- * [ ] Modify to accept binary data instead of strings
+ * [ ] Improve sendData and receiveData functions
+ * [ ] Improve error handling
  */
 
 #include "socket.h"
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
 /* ---------- Socket ---------- */
 
 /* 
  * Socket constructor. Calls socket() to get a socket file descriptor.
  */
-Socket::Socket() {
-	std::cout << "Creating Socket" << std::endl;
-
+Socket::Socket() : server(0) {
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (sockfd < 0) {
@@ -30,7 +36,7 @@ Socket::Socket() {
  * descriptor
  * fd: File descriptor of an existing socket
  */
-Socket::Socket(int fd): sockfd(fd) {
+Socket::Socket(int fd) : sockfd(fd), server(0) {
 	if (sockfd < 0) {
 		perror("Invalid socket file descriptor");
 		exit(1);
@@ -43,12 +49,27 @@ Socket::Socket(int fd): sockfd(fd) {
  * hostname: Name of the server
  * portNumber: Port number of the server
  */
-Socket::Socket(std::string hostname, int portNumber) {
-	std::cout << "Creating socket and connecting to server" << std::endl;
-
+Socket::Socket(std::string hostname, int portNumber) : server(0) {
 	// Create socket
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	
+	if (sockfd < 0) {
+		perror("Could not open socket");
+		exit(1);
+	}
+	
+	connectTo(hostname, portNumber);
+}
+
+/*
+ * Socket desctructor. Closes the file descriptor held by this object
+ */
+Socket::~Socket() {
+	close(sockfd);
+	delete server;
+}
+
+bool Socket::connectTo(std::string hostname, int portNumber) {
 	// Get server information
 	server = gethostbyname(hostname.c_str());
 	if (server == NULL) {
@@ -70,14 +91,7 @@ Socket::Socket(std::string hostname, int portNumber) {
 		exit(1);
 	}
 
-	std::cout << "Connected to server" << std::endl;	
-}
-
-/*
- * Socket desctructor. Closes the file descriptor held by this object
- */
-Socket::~Socket() {
-	close(sockfd);
+	return true;
 }
 
 /*
@@ -120,8 +134,6 @@ char* Socket::receiveData() {
  * portNumber and calls listen() to mark it as a passive socket
  */
 ServerSocket::ServerSocket(unsigned short portNumber) {
-	std::cout << "Creating ServerSocket" << std::endl;
-
 	// Clear then populate serverAddress
 	memset(&serverAddress, 0, sizeof serverAddress);
 	serverAddress.sin_family = AF_INET;
@@ -149,6 +161,5 @@ Socket ServerSocket::acceptConnection() {
 			(struct sockaddr *) &clientAddr,
 			&clientLength);
 
-	std::cout << "Accepted connection from client" << std::endl;
 	return Socket(newSockfd);
 }

@@ -53,6 +53,6 @@ int Peers::initialize(std::string peersFile) {
 	return returnCodes::OK;
 }
 
-Peer Peers::operator ()(int i) {
+Peer& Peers::operator ()(int i) {
 	return _peers[i];
 }
