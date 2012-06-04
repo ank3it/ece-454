@@ -1,9 +1,9 @@
-#include "StdAfx.h"
 #include "file_manager.h"
 #include "util.h"
 #include <fstream>
 #include "return_codes.h"
-
+#include <list>
+#include <string>
 
 file_manager::file_manager(void)
 {
@@ -22,6 +22,8 @@ file_manager::~file_manager(void)
 int file_manager::chunk_file(std::string filepath) {
 	
 	int nof_chunks;
+	std::list<std::string> list;
+	std::list<std::string>::iterator it;
 	
 	std::ifstream inFile(filepath.c_str(), 
 		std::ios::in | std::ios::binary | std::ios::ate);
@@ -34,12 +36,17 @@ int file_manager::chunk_file(std::string filepath) {
 			char* buffer;
 			buffer = new char[chunkSize];
 			inFile.read(buffer, chunkSize);
-			FileChunk *chunk = new FileChunk(Util::extractFilename(filepath),i,0,buffer,chunkSize);
-			nof_chunks = nof_chunks + 1;
-			//TODO: how should I pass it on the totall no. of chunks
-			//chunk->_totalChunks = nof_chunks;
+			list.push_front(buffer);
 			delete[] buffer;
 		}
+		
+		for ( int i=0; list.size() != 0 ;i++)
+		{
+			std::string data = list.front();
+			//facing an error in the line below
+			FileChunk *chunk = new FileChunk((Util::extractFilename(filepath)),i,list.size(),data.c_str(),chunkSize);
+		}
+
 		inFile.close();
 	} else {
 		return -1;
