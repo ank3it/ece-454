@@ -5,6 +5,8 @@
  */
 
 #include "peer.h"
+#include <netinet/in.h>
+#include <sstream>
 #include <iostream>	// remove
 
 Peer::Peer() : 
@@ -13,27 +15,41 @@ _ipAddress(""), _portNumber(0), _state(Peer::disconnected), _threadId(0) {
 	// Empty
 }
 
-// remove
+/*
+ * Destructor
+ */
 Peer::~Peer() {
 	std::cout << "Peer destructor" << std::endl;
+	_socket.closeConnection();
 }
 
 /*
- * Attempts to open a connection-based socket to the peer. Also spawns a new 
- * thread to process send and receive requests.
+ * Attempts to connect to the peer. Will not be able to receive any data until
+ * a new thread is started with a subsquent start() call.
  */
 bool Peer::connect() {
-	if (socket.connectTo(_ipAddress, _portNumber)) {
-		start();
-		return true;
-	} else {
-		return false;
-	}
+	return _socket.connectTo(_ipAddress, _portNumber);
 }
 
 /*
- * Inherited from Thread class. Performs socket based I/O operations
+ * Inherited from Thread class. Runs in a new thread. Responsible for 
+ * receiving data from the socket and placing it in a synchronized receive 
+ * queue.
  */
 void Peer::run() {
-	std::cout << "hello world" << std::endl;
+	while (true) {
+		// Retrieve the size of the data frame to follow
+		char sizeBuffer[SIZE_BUFFER_SIZE];
+		_socket.receiveData(sizeBuffer, SIZE_BUFFER_SIZE);
+		
+		// Now retreive actual data frame
+		int size = ntohl(*(int *)sizeBuffer);
+		char dataBuffer[size];
+		_socket.receiveData(dataBuffer, size);
+
+		std::stringstream ss;
+		ss << dataBuffer;
+
+		// Now deserialize the data in the stringstream
+	}
 }

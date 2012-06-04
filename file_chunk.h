@@ -17,6 +17,7 @@ class FileChunk {
 		FileChunk(std::string, int, int, char*, int);
 		~FileChunk();
 
+	private:
 		std::string _filename;
 		int _chunkIndex;
 		int _totalChunks;

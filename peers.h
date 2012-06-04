@@ -14,7 +14,7 @@
 #include <string>
 #include "peer.h"
 
-const int maxPeers  = 6;
+const int MAX_PEERS = 6;
 
 class Peers {
 	public:
@@ -31,10 +31,11 @@ class Peers {
 		int initialize(std::string peersFile);
 		Peer& operator()(int i);		
 		int getNumPeers() const { return _numPeers; }
+		void setNumPeers(int const value) { _numPeers = value; }
 		
 	private:
 		int _numPeers;
-		Peer _peers[maxPeers];
+		Peer _peers[MAX_PEERS];
 };
 
 #endif  /* _PEERS_H_ */

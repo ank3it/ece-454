@@ -2,9 +2,6 @@
  * File: util.cpp
  * Group: 14
  * Description: Implementation for the Util class.
- *
- * TODO:
- * [ ] Properly implement generateUniqueFilename() function
  */
 
 #include "util.h"

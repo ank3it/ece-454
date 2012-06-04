@@ -10,15 +10,17 @@
 
 #include <string>
 #include "peers.h"
+#include "socket/socket.h"
 
-const int chunkSize = 65536;
-const std::string peersList = "peers.lst";
-const std::string filesDir = "files";
+const int CHUNK_SIZE = 65536;
+const unsigned short PORT_NUMBER = 8080;
+const std::string PEERS_LIST = "peers.lst";
+const std::string FILES_DIR = "files";
 
 // Forward declarations
 class Status;
 
-class LocalPeer {
+class LocalPeer : public Thread {
 	public:
 		LocalPeer();
 		~LocalPeer();
@@ -30,8 +32,11 @@ class LocalPeer {
 		int leave();
 		// End of required interface
 
+		void run();
+
 	private:
 		Peers _peers;
+		ServerSocket* _serverSocket;
 };
 
 #endif  /* _LOCAL_PEER_H_ */
