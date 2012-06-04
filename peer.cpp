@@ -5,7 +5,6 @@
  */
 
 #include "peer.h"
-#include <netinet/in.h>
 #include <sstream>
 #include <iostream>	// remove
 
@@ -28,7 +27,16 @@ Peer::~Peer() {
  * a new thread is started with a subsquent start() call.
  */
 bool Peer::connect() {
-	return _socket.connectTo(_ipAddress, _portNumber);
+	if (_socket.connectTo(_ipAddress, _portNumber)) {
+		_state = connected;
+		return true;
+	} else {
+		return false;
+	}
+}
+
+void Peer::disconnect() {
+	_socket.closeConnection();
 }
 
 /*

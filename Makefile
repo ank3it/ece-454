@@ -7,7 +7,7 @@ LD=g++
 LDFLAGS=-pthread
 
 OBJS= local_peer.o peer.o peers.o status.o socket/socket.o util.o \
-file_chunk.o thread.o
+file_chunk.o thread.o message.o
 
 all: a.out b.out
 
@@ -26,6 +26,7 @@ socket/socket.o:
 util.o:
 file_chunk.o:
 thread.o:
+message.o:
 
 .PHONY: clean
 clean:

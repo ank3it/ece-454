@@ -108,8 +108,19 @@ int LocalPeer::join() {
 	return returnCodes::OK;
 }
 
+/*
+ * Leaves the set of peers. The local peer informs all other peers that it is
+ * leaving. Attempts to push any remaining least replicated chunks out to the 
+ * peers before leaving if there is a small number of them.
+ */
 int LocalPeer::leave() {
-	return 0;
+	for (int i = 0; i < _peers.getNumPeers(); i++) {
+		// Push chunks to peers
+
+		_peers(i).disconnect();
+	}
+
+	return returnCodes::OK;
 }
 
 /*

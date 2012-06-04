@@ -1,6 +1,4 @@
-/*
- * File: file_chunk.h
- * Group: 14
+/* * File: file_chunk.h * Group: 14
  * Description: Header file for the FileChunk class. This class represents a 
  * small chunk of a larger file. Overloads the << and >> operators to provide
  * text-based serialization and deserialization.
@@ -17,7 +15,6 @@ class FileChunk {
 		FileChunk(std::string, int, int, char*, int);
 		~FileChunk();
 
-	private:
 		std::string _filename;
 		int _chunkIndex;
 		int _totalChunks;

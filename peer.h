@@ -29,11 +29,12 @@ class Peer : public Thread {
 		void setState(State const value) { _state = value; }
 		void setSocket(Socket const value) { _socket = value; }
 		bool connect();
+		void disconnect();
 		void run();
 
 		std::string _ipAddress;
 		int _portNumber;
-		enum State _state;
+		State _state;
 		pthread_t _threadId;
 		ConcurrentQueue<FileChunk> _receiveQueue;
 		Socket _socket;

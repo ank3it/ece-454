@@ -91,6 +91,9 @@ std::istream& operator>>(std::istream& is, FileChunk& fileChunk) {
 			}
 	
 		} while (tmpStr.compare("_END_FILECHUNK_") != 0);
+	} else {
+		// Reset the stream get pointer position
+		is.seekg(-tmpStr.length(), std::ios_base::cur);
 	}
 
 	return is;
