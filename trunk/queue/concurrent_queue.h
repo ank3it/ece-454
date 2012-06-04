@@ -5,9 +5,6 @@
  * Description: Header and implementation for a concurrent queue. This queue 
  * allows for synchronized access from different threads. Since this class uses
  * templates, both the declaration and definition are included in this header.
- *
- * TODO:
- * [ ] Test pop() implementation
  */
 
 #ifndef _CONCURRENT_QUEUE_H_

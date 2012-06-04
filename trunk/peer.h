@@ -14,6 +14,8 @@
 #include "file_chunk.h"
 #include "socket/socket.h"
 
+const int SIZE_BUFFER_SIZE = 4;
+
 class Peer : public Thread {
 	public:
 		Peer();
@@ -23,19 +25,18 @@ class Peer : public Thread {
 
 		State getState() const { return _state; }
 		void setIpAddress(std::string const ipAddress) { _ipAddress = ipAddress; }
-		void setPortNumber(int const portNumber) { _portNumber = portNumber; }
-		void setState(State newState) { _state = newState; }
+		void setPortNumber(int const value) { _portNumber = value; }
+		void setState(State const value) { _state = value; }
+		void setSocket(Socket const value) { _socket = value; }
 		bool connect();
 		void run();
 
-	private:
 		std::string _ipAddress;
 		int _portNumber;
 		enum State _state;
 		pthread_t _threadId;
 		ConcurrentQueue<FileChunk> _receiveQueue;
-		ConcurrentQueue<FileChunk> _sendQueue;
-		Socket socket;
+		Socket _socket;
 };
 
 #endif  /* _PEER_H_ */

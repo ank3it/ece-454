@@ -1,41 +1,26 @@
 // Test code for socket IO with threads
 
 #include "socket.h"
-#include <pthread.h>
 #include <iostream>
-
-void* receiveStuff(void* params) {
-	Socket* socket = (Socket *)params;
-
-	std::string receivedMsg;
-	while (receivedMsg.compare("exit") != 0) {
-		receivedMsg = socket->receiveData();
-		std::cout << "Client: " << receivedMsg << std::endl;
-	}
-
-	return NULL;
-}
+#include <netinet/in.h>
 
 int main() {
 	std::cout << "Hello from server" << std::endl;
 
-	pthread_t thread_id1;
-
-	ServerSocket serverSocket(8080);
+	ServerSocket serverSocket(8081);
 	std::cout << "ServerSocket created" << std::endl;
 
 	Socket clientSocket = serverSocket.acceptConnection();
+	std::cout << "Client connection accepted" << std::endl;
 
-	pthread_create(&thread_id1, NULL, &receiveStuff, &clientSocket);
+	char buf[4];
+	clientSocket.receiveData(buf, 4);
+	int size = ntohl(*(int*)buf);
+	std::cout << "num = " << size << std::endl;
+	char buf2[size];
 
-	std::string msg;
-	while (msg.compare("exit") != 0) {
-		getline(std::cin, msg);
-		clientSocket.sendData(msg, msg.length());
-	}
-
-	pthread_cancel(thread_id1);
-	pthread_join(thread_id1, NULL);
+	clientSocket.receiveData(buf2, size);
+	std::cout << buf2 << std::endl;
 
 	return 0;
 }

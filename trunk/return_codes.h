@@ -28,6 +28,9 @@ namespace returnCodes {
 
 	// Cannot find any peer (e.g. no peers in a peer file); fatal
 	const int ERROR_NO_PEERS_FOUND = -4;
+
+	// Cannot find the specified file; fatal
+	const int ERROR_FILE_NOT_FOUND = -7;
 }
 
 #endif /* _RETURN_CODES_ */

@@ -16,7 +16,8 @@ Peers::Peers() : _numPeers(0) {
 }
 
 /*
- * Reads the peersFile and creates a Peer for each entry in the file
+ * Reads the peersFile and populates a Peer object with the IP address and port
+ * number for each entry in the file
  *
  * peersFile: The name of peers file containing a list of the ip addresses and
  * 			  port numbers of the peers
@@ -29,26 +30,29 @@ int Peers::initialize(std::string peersFile) {
 
 	file.open(peersFile.c_str());
 
-	if (file.is_open()) {
-		while (file >> lineItem) {
-			// Stop after maxPeers and issue warning
-			if (_numPeers >= maxPeers)
-				return returnCodes::WARNING_TOO_MANY_PEERS;
+	if (!file.is_open())
+		return returnCodes::ERROR_NO_PEERS_FOUND;
 
-			ipAddress = lineItem;
+	while (file >> lineItem) {
+		// Stop after maxPeers and return with warning
+		if (_numPeers >= MAX_PEERS)
+			return returnCodes::WARNING_TOO_MANY_PEERS;
 
-			if (file >> lineItem)
-				portNumber = atoi(lineItem.c_str());
-			else
-				return -1;
+		ipAddress = lineItem;
 
-			_peers[_numPeers].setIpAddress(ipAddress);
-			_peers[_numPeers].setPortNumber(portNumber);
-			_numPeers++;
-		}
-	} else {
-		return -1;
+		if (file >> lineItem)
+			portNumber = atoi(lineItem.c_str());
+		else
+			return -1;
+
+		_peers[_numPeers].setIpAddress(ipAddress);
+		_peers[_numPeers].setPortNumber(portNumber);
+		_numPeers++;
 	}
+
+	// Peers file did not contain any peers
+	if (_numPeers == 0)
+		return returnCodes::ERROR_NO_PEERS_FOUND;
 
 	return returnCodes::OK;
 }

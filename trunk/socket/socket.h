@@ -11,9 +11,6 @@
 #include <netdb.h>
 #include <string>
 
-/* Constants */
-const int BUFFER_SIZE = 256;
-
 /*
  * Represents a single socket. Stores the necessary socket file descriptor and 
  * provides functions to send and receive data via the socket.
@@ -23,16 +20,16 @@ class Socket {
 		Socket();
 		Socket(int);
 		Socket(std::string, int);
-		~Socket();
 
+		int getSockfd() { return sockfd; }
 		bool connectTo(std::string, int);
+		void closeConnection();
 		int sendData(std::string, int);
-		char* receiveData();
-
+		void receiveData(char*, int);
+	
 	protected:
 		int sockfd;
 		int portNumber;
-		char buffer[BUFFER_SIZE];
 		struct sockaddr_in serverAddress;
 	
 	private:
@@ -46,7 +43,7 @@ class ServerSocket : public Socket {
 	public:
 		ServerSocket(unsigned short);
 
-		Socket acceptConnection();
+		Socket acceptConnection(std::string&, int&);
 
 	private:
 		struct sockaddr_in clientAddr;
