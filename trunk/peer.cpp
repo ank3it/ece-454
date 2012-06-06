@@ -35,8 +35,27 @@ bool Peer::connect() {
 	}
 }
 
+/*
+ * Close socket connection to peer.
+ */
 void Peer::disconnect() {
 	_socket.closeConnection();
+	_state = disconnected;
+}
+
+/*
+ * Sends the given Message object to the peer
+ *
+ * msg: The Message object to be sent
+ */
+void Peer::sendMessage(Message& msg) {
+	std::stringstream ss;
+	std::string serializedMsg;
+
+	ss << msg;
+	serializedMsg = ss.str();
+
+	_socket.sendData(serializedMsg, serializedMsg.length());
 }
 
 /*
@@ -55,9 +74,10 @@ void Peer::run() {
 		char dataBuffer[size];
 		_socket.receiveData(dataBuffer, size);
 
-		std::stringstream ss;
-		ss << dataBuffer;
-
-		// Now deserialize the data in the stringstream
+		// Deserialize data into Message object and put in receive queue
+		Message msg;
+		std::stringstream ss(dataBuffer);
+		ss >> msg;
+		_receiveQueue.push(msg);
 	}
 }

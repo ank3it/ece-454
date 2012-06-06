@@ -7,7 +7,8 @@ int main() {
 	std::cout << "test.cpp" << std::endl;
 
 	std::stringstream ss;
-	FileChunk fc("tmp.txt", 2, 24, "hello", 5);
+	char buf[] = "hello";
+	FileChunk fc("tmp.txt", 2, 24, buf, 5);
 	std::cout << fc << std::endl << std::endl;
 	ss << fc;
 

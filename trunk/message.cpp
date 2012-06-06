@@ -38,14 +38,11 @@ std::istream& operator>>(std::istream& is, Message& msg) {
 			is >> tmpStr;
 
 			if (tmpStr.compare("_SENDER_IP_ADDRESS_") == 0) {
-				is >> tmpStr;
-				msg._senderIpAddress = tmpStr;
+				is >> msg._senderIpAddress;
 			} else if (tmpStr.compare("_SENDER_PORT_NUMBER_") == 0) {
-				is >> tmpStr;
-				msg._senderPortNumber = atoi(tmpStr.c_str());
+				is >> msg._senderPortNumber;
 			} else if (tmpStr.compare("_MESSAGE_TYPE_") == 0) {
-				is >> tmpStr;
-				msg._messageType = atoi(tmpStr.c_str());
+				is >> msg._messageType;
 			} else if (tmpStr.compare("_START_MESSAGE_BODY_") == 0) {
 				std::string msgBody;
 				is >> tmpStr;
