@@ -70,17 +70,13 @@ std::istream& operator>>(std::istream& is, FileChunk& fileChunk) {
 			is >> tmpStr;
 
 			if (tmpStr.compare("_FILENAME_") == 0) {
-				is >> tmpStr;
-				fileChunk._filename = tmpStr;
+				is >> fileChunk._filename;
 			} else if (tmpStr.compare("_CHUNKINDEX_") == 0) {
-				is >> tmpStr;
-				fileChunk._chunkIndex = atoi(tmpStr.c_str());
+				is >> fileChunk._chunkIndex;
 			} else if (tmpStr.compare("_TOTALCHUNKS_") == 0) {
-				is >> tmpStr;
-				fileChunk._totalChunks = atoi(tmpStr.c_str());
+				is >> fileChunk._totalChunks;
 			} else if (tmpStr.compare("_DATASIZE_") == 0) {
-				is >> tmpStr;
-				fileChunk._dataSize = atoi(tmpStr.c_str());
+				is >> fileChunk._dataSize;
 				fileChunk._data = new char[fileChunk._dataSize];
 			} else if (tmpStr.compare("_START_DATA_") == 0) {
 				// Get and discard the leading space

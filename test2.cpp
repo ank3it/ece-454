@@ -1,11 +1,9 @@
 #include <iostream>
-#include "socket/socket.h"
+#include "file_manager.h"
 
 int main() {
-	std::cout << "test.cpp" << std::endl;
+	std::cout << "test2.cpp" << std::endl;
 
-	Socket s("127.0.0.1", 8080);
-	std::cout << "client connected" << std::endl;
 
-	while (true);
+	return 0;
 }

@@ -11,7 +11,7 @@
 #include <string>
 #include "thread.h"
 #include "queue/concurrent_queue.h"
-#include "file_chunk.h"
+#include "message.h"
 #include "socket/socket.h"
 
 const int SIZE_BUFFER_SIZE = 4;
@@ -30,13 +30,14 @@ class Peer : public Thread {
 		void setSocket(Socket const value) { _socket = value; }
 		bool connect();
 		void disconnect();
+		void sendMessage(Message&);
 		void run();
 
 		std::string _ipAddress;
 		int _portNumber;
 		State _state;
 		pthread_t _threadId;
-		ConcurrentQueue<FileChunk> _receiveQueue;
+		ConcurrentQueue<Message> _receiveQueue;
 		Socket _socket;
 };
 
