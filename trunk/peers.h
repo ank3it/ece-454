@@ -12,13 +12,13 @@
 #define _PEERS_H_
 
 #include <string>
+#include <list>
 #include "peer.h"
-
-const int MAX_PEERS = 6;
 
 class Peers {
 	public:
 		Peers();
+		~Peers();
 
 		// The peersFile is the name of a file that contains a list of the 
 		// peers. Its format is as follows: in plaintext there are up to 
@@ -30,12 +30,11 @@ class Peers {
 		// should be present.
 		int initialize(std::string peersFile);
 		Peer& operator()(int i);		
-		int getNumPeers() const { return _numPeers; }
-		void setNumPeers(int const value) { _numPeers = value; }
+		int getNumPeers() const { return _peers.size(); }
 		
 	private:
-		int _numPeers;
-		Peer _peers[MAX_PEERS];
+		//Peer _peers[MAX_PEERS];
+		std::list<Peer*> _peers;
 };
 
 #endif  /* _PEERS_H_ */

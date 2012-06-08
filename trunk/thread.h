@@ -16,7 +16,8 @@ class Thread {
 		Thread() { /* Empty */ }
 		virtual ~Thread() { /* Empty */ }
 
-		bool start();
+		bool startThread();
+		bool stopThread();
 		void waitForThread();
 
 	protected:

@@ -7,10 +7,18 @@
 #include "thread.h"
 
 /*
- * Creates a new thread and starts execution in the new thread
+ * Creates a new thread and starts execution in the new thread. Returns true if
+ * the thread was started successfully.
  */
-bool Thread::start() {
+bool Thread::startThread() {
 	return (pthread_create(&_threadId, NULL, &executeRun, this) == 0);
+}
+
+/*
+ * Cancels the running thread. Returns true if the thread was cancelled.
+ */
+bool Thread::stopThread() {
+	return (pthread_cancel(_threadId) == 0);
 }
 
 /*

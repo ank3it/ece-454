@@ -43,7 +43,7 @@ class ServerSocket : public Socket {
 	public:
 		ServerSocket(unsigned short);
 
-		Socket acceptConnection(std::string&, int&);
+		Socket acceptConnection();
 
 	private:
 		struct sockaddr_in clientAddr;
