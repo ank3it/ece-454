@@ -11,11 +11,8 @@
 #include <string>
 #include "peers.h"
 #include "socket/socket.h"
-
-const int CHUNK_SIZE = 65536;
-const unsigned short PORT_NUMBER = 8080;
-const std::string PEERS_LIST = "peers.lst";
-const std::string FILES_DIR = "files";
+#include "server.h"
+#include "file_manager.h"
 
 // Forward declarations
 class Status;
@@ -23,6 +20,7 @@ class Status;
 class LocalPeer : public Thread {
 	public:
 		LocalPeer();
+		LocalPeer(unsigned short);
 		~LocalPeer();
 
 		// Required interface
@@ -32,11 +30,14 @@ class LocalPeer : public Thread {
 		int leave();
 		// End of required interface
 
-		void run();
-
 	private:
+		unsigned short _portNumber;
 		Peers _peers;
 		ServerSocket* _serverSocket;
+		Server* _server;
+		FileManager _fileManager;
+
+		void run();
 };
 
 #endif  /* _LOCAL_PEER_H_ */

@@ -33,6 +33,7 @@ class Peer : public Thread {
 		void sendMessage(Message&);
 		void run();
 
+	private:
 		std::string _ipAddress;
 		int _portNumber;
 		State _state;

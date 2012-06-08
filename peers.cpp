@@ -9,10 +9,23 @@
 #include <fstream>
 #include <cstdlib>
 #include "return_codes.h"
+#include "constants.h"
 #include "peers.h"
+#include <iostream> // remove
 
-Peers::Peers() : _numPeers(0) {
-	// Empty constructor
+Peers::Peers() {
+	// Empty
+}
+
+/*
+ * Destructor. Iterates through the peers list and destroys all Peer objets.
+ */
+Peers::~Peers() {
+	std::cout << "Peers destructor()" << std::endl;
+	std::list<Peer*>::iterator it;
+
+	for (it = _peers.begin(); it != _peers.end(); ++it)
+		delete *it;
 }
 
 /*
@@ -27,6 +40,7 @@ int Peers::initialize(std::string peersFile) {
 	std::string lineItem;
 	std::string ipAddress;
 	int portNumber;
+	int numPeers = 0;
 
 	file.open(peersFile.c_str());
 
@@ -35,7 +49,7 @@ int Peers::initialize(std::string peersFile) {
 
 	while (file >> lineItem) {
 		// Stop after maxPeers and return with warning
-		if (_numPeers >= MAX_PEERS)
+		if (_peers.size() >= constants::MAX_PEERS)
 			return returnCodes::WARNING_TOO_MANY_PEERS;
 
 		ipAddress = lineItem;
@@ -45,18 +59,28 @@ int Peers::initialize(std::string peersFile) {
 		else
 			return -1;
 
-		_peers[_numPeers].setIpAddress(ipAddress);
-		_peers[_numPeers].setPortNumber(portNumber);
-		_numPeers++;
+		Peer* p = new Peer();
+		p->setIpAddress(ipAddress);
+		p->setPortNumber(portNumber);
+		++numPeers;
 	}
 
 	// Peers file did not contain any peers
-	if (_numPeers == 0)
+	if (numPeers == 0)
 		return returnCodes::ERROR_NO_PEERS_FOUND;
 
 	return returnCodes::OK;
 }
 
-Peer& Peers::operator ()(int i) {
-	return _peers[i];
+/*
+ * Returns a reference to the Peer object specified by the given index
+ */
+Peer& Peers::operator()(int i) {
+	std::list<Peer*>::iterator it;
+	it = _peers.begin();
+
+	for (int j = 0; j < i; ++j)
+		++it;
+
+	return **it;
 }

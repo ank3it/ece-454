@@ -1,12 +1,13 @@
+/*
+ * File: file.cpp
+ * Group: 14
+ * Description: Implementation for the File class which represents a file
+ * being managed by the system.
+ */
+
+#include <fstream>
 #include "file.h"
 #include "constants.h"
-
-/*
- * Constructor. Creates an object with an invalid but consistent state
- */
-File::File() : _filename(""), _totalChunks(0), _isChunkAvailable(0) {
-	// Empty
-}
 
 /*
  * Constructor. Initializes the file object to the given value
@@ -18,14 +19,16 @@ File::File() : _filename(""), _totalChunks(0), _isChunkAvailable(0) {
  */
 File::File(std::string fn, int tc, bool isAvailable) 
 : _filename(fn), _totalChunks(tc) {
-	_isChunkAvailable = new bool[_totalChunks];
+	_isAvailable = new bool[_totalChunks];
 
-	if (isAvailable) {		// File available locally
+	if (isAvailable) {
+		// File available locally
 		for (int i = 0; i < _totalChunks; i++)
-			_isChunkAvailable[i] = true;
-	} else {				// No chunks available locally
+			_isAvailable[i] = true;
+	} else {
+		// No chunks available locally
 		for (int i = 0; i < _totalChunks; i++)
-			_isChunkAvailable[i] = false;
+			_isAvailable[i] = false;
 	}
 }
 
@@ -33,15 +36,7 @@ File::File(std::string fn, int tc, bool isAvailable)
  * Destructor
  */
 File::~File() {
-	delete[] _isChunkAvailable;
-}
-
-bool File::open() {
-	return false;
-}
-
-void File::close() {
-
+	delete[] _isAvailable;
 }
 
 /*
@@ -56,17 +51,20 @@ bool File::readChunk(int chunkIndex, char* buffer, int size) {
 	if (chunkIndex >= _totalChunks)
 		return false;
 
-	_file.open(_filename.c_str(), 
+	if (!_isAvailable[chunkIndex])
+		return false;
+
+	std::fstream inFile(_filename.c_str(), 
 		std::ios::out | std::ios::binary | std::ios::app);
 
-	if (!_file.is_open())
+	if (!inFile.is_open())
 		return false;
 
 	int offset = chunkIndex * constants::CHUNK_SIZE;
-	_file.seekg(offset);
+	inFile.seekg(offset);
 
-	_file.read(buffer, size);
-	_file.close();
+	inFile.read(buffer, size);
+	inFile.close();
 
 	return true;
 }
@@ -83,17 +81,20 @@ bool File::writeChunk(int chunkIndex, char* buffer, int size) {
 	if (chunkIndex >= _totalChunks)
 		return false;
 
-	_file.open(_filename.c_str(), 
+	std::fstream outFile(_filename.c_str(), 
 		std::ios::in | std::ios::binary | std::ios::app);
 
-	if (!_file.is_open())
+	if (!outFile.is_open())
 		return false;
 
 	int offset = chunkIndex * constants::CHUNK_SIZE;
-	_file.seekp(offset);
+	outFile.seekp(offset);
 
-	_file.write(buffer, size);
-	_file.close();
+	outFile.write(buffer, size);
+	outFile.close();
+
+	// Mark chunk as available
+	_isAvailable[chunkIndex] = true;
 
 	return true;
 }

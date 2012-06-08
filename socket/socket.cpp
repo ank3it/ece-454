@@ -12,7 +12,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <iostream> // remove
 
 /* ---------- Socket ---------- */
@@ -167,16 +166,11 @@ ServerSocket::ServerSocket(unsigned short portNumber) {
  * Accepts a connection request from a client. Uses the blocking accept() call.
  * Returns the socket which can used to communicate with the client.
  */
-Socket ServerSocket::acceptConnection(std::string& ipAddress, int& portNumber) {
+Socket ServerSocket::acceptConnection() {
 	socklen_t clientLength = sizeof clientAddr;
 	int newSockfd = accept(sockfd, 
 			(struct sockaddr *) &clientAddr,
 			&clientLength);
-
-	char str[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &(clientAddr.sin_addr), str, INET_ADDRSTRLEN);
-	ipAddress = str;
-	portNumber = ntohs(clientAddr.sin_port);
 
 	return Socket(newSockfd);
 }
