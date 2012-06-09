@@ -1,14 +1,12 @@
-/*
- * File: util.cpp
+/* * File: util.cpp
  * Group: 14
  * Description: Implementation for the Util class.
  */
 
-#include <sys/unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
+#include <iostream>
+#include <cstdlib>
+#include <unistd.h>
+#include <sstream>
 #include "util.h"
 
 /*
@@ -29,9 +27,41 @@ std::string Util::extractFilename(std::string filepath) {
  * name exists then returns the given name. If name is not unique, then appends
  * an integer to the filename to make it unique (i.e. tmp.txt -> tmp(1).txt)
  *
- * path: The path where the file will be created
+ * folder: The folder where the file will be created
  * filename: The initial name of the file
  */
-std::string Util::generateUniqueFilename(std::string path, std::string filename) {
-	return path + "/" + filename;
+std::string Util::generateUniqueFilename(std::string folder, std::string filename) {
+	long size;
+	char* buf;
+	char* ptr;
+
+	size = pathconf(".", _PC_PATH_MAX);
+
+	if ((buf = (char *)malloc((size_t)size)) != NULL)
+		ptr = getcwd(buf, (size_t)size);
+	
+	std::stringstream ss;
+	ss << ptr << "/" << folder << "/" << filename;
+	return ss.str();
+}
+
+/*
+ * Prints the given message
+ */
+void Log::info(std::string msg) {
+	std::cout << "INFO: "  << msg << std::endl;
+}
+
+/*
+ * Prints the given message
+ */
+void Log::warn(std::string msg) {
+	std::cout << "WARN: "  << msg << std::endl;
+}
+
+/*
+ * Prints the given message
+ */
+void Log::error(std::string msg) {
+	std::cout << "ERROR: "  << msg << std::endl;
 }

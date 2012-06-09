@@ -13,12 +13,12 @@
 
 class Thread {
 	public:
-		Thread() { /* Empty */ }
+		Thread();
 		virtual ~Thread() { /* Empty */ }
 
 		bool startThread();
-		bool stopThread();
-		void waitForThread();
+		void stopThread();
+		bool isCancelFlagSet();
 
 	protected:
 		/*
@@ -30,6 +30,9 @@ class Thread {
 	private:
 		static void* executeRun(void*);
 		pthread_t _threadId;
+
+		pthread_mutex_t _cancelFlagMutex;
+		bool _cancelFlag;
 };
 
 #endif /* _THREAD_H_ */

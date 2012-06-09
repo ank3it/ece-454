@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include "../util.h"
 #include <iostream> // remove
 
 /* ---------- Socket ---------- */
@@ -23,8 +24,7 @@ Socket::Socket() {
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (sockfd < 0) {
-		perror("Could not open socket");
-		exit(1);
+		Log::error("Could not open socket");
 	}
 }
 
@@ -35,8 +35,7 @@ Socket::Socket() {
  */
 Socket::Socket(int fd) : sockfd(fd) {
 	if (sockfd < 0) {
-		perror("Invalid socket file descriptor");
-		exit(1);
+		Log::error("Invalid socket file descriptor");
 	}
 }
 
@@ -51,8 +50,7 @@ Socket::Socket(std::string hostname, int portNumber) {
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	
 	if (sockfd < 0) {
-		perror("Could not open socket");
-		exit(1);
+		Log::error("Could not open socket");
 	}
 	
 	connectTo(hostname, portNumber);
@@ -62,8 +60,8 @@ bool Socket::connectTo(std::string hostname, int portNumber) {
 	// Get server information
 	server = gethostbyname(hostname.c_str());
 	if (server == NULL) {
-		perror("Unable to get host by name");
-		exit(1);
+		Log::error("Unable to get host by name");
+		return false;
 	}
 
 	// Clear then populate serverAddress
@@ -76,8 +74,8 @@ bool Socket::connectTo(std::string hostname, int portNumber) {
 	if (connect(sockfd, 
 				(struct sockaddr *) &serverAddress, 
 				sizeof serverAddress) < 0) {
-		perror("Unable to connect");
-		exit(1);
+		Log::error("Unable to connect");
+		return false;
 	}
 
 	return true;
@@ -102,14 +100,12 @@ int Socket::sendData(std::string msg, int length) {
 
 	int nextFrameSize = htonl(length);
 	if (send(sockfd, &nextFrameSize, sizeof(nextFrameSize), 0) < 0) {
-		perror("Failed to send size header");
-		exit(1);
+		Log::error("Failed to send size header");
 	}
 
 	n = send(sockfd, (char *)msg.c_str(), length, 0);
 	if (n < 0) {
-		perror("Failed to write to socket");
-		exit(1);
+		Log::error("Failed to write to socket");
 	}
 
 	return n;
@@ -124,14 +120,12 @@ int Socket::sendData(std::string msg, int length) {
  * size: The size of the data to read
  */
 void Socket::receiveData(char* buffer, int size) {
-	std::cout << "receiveData()" << std::endl << sockfd << std::endl;
 	int receivedByteCount = 0;
 
 	receivedByteCount = recv(sockfd, buffer, size, 0);
 
 	if (receivedByteCount < 0) {
-		perror("Unable to read from socket");
-		exit(1);
+		return;
 	} else if (receivedByteCount < size) {
 		receiveData(buffer + receivedByteCount, size - receivedByteCount);
 	}
@@ -154,8 +148,7 @@ ServerSocket::ServerSocket(unsigned short portNumber) {
 	if (bind(sockfd, 
 			(struct sockaddr *) &serverAddress, 
 			sizeof serverAddress) < 0) {
-		perror("Unable to bind socket");
-		exit(1);
+		Log::error("Unable to bind socket");
 	}
 
 	// Listen

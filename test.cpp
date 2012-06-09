@@ -1,18 +1,23 @@
 #include <iostream>
 #include <sstream>
-#include "file_chunk.h"
-#include "message.h"
+#include <string>
+#include "local_peer.h"
+#include "util.h"
 
 int main() {
 	std::cout << "test.cpp" << std::endl;
 
-	std::stringstream ss;
-	ss << "this test";
-	std::string s;
-	ss >> s;
-	std::cout << s << std::endl;
-	ss >> s;
-	std::cout << s << std::endl;
+	LocalPeer lp;
+	//lp.insert("/home/usman/working_dir/p1/in.jpg");
+	lp.join();
+
+	Log::info("at infinite while loop");
+
+	std::string str;
+	while (str.compare("q") != 0) {
+		std::cin >> str;
+	}
+	Log::info("after infinite while loop");
 
 	return 0;
 }

@@ -14,8 +14,6 @@
 #include "message.h"
 #include "socket/socket.h"
 
-const int SIZE_BUFFER_SIZE = 4;
-
 class Peer : public Thread {
 	public:
 		Peer();
