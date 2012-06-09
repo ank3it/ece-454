@@ -14,6 +14,8 @@ class Util {
 	public:
 		static std::string extractFilename(std::string);
 		static std::string generateUniqueFilename(std::string, std::string);
+		static std::string getIpAddress();
+		static int getPortNumber();
 };
 
 #endif /* _UTIL_H_ */

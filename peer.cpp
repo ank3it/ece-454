@@ -19,6 +19,7 @@ _ipAddress(""), _portNumber(0), _state(Peer::disconnected), _threadId(0) {
  */
 Peer::~Peer() {
 	std::cout << "Peer destructor" << std::endl;
+	stopThread();
 	_socket.closeConnection();
 }
 

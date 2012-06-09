@@ -19,6 +19,8 @@ class FileManager {
 
 		static const int CHUNK_SIZE = 65536; // remove
 
+		File* getFile(std::string);
+		std::map<std::string, File*>* getFilesTable() { return &_filesTable; }
 		int addLocalFile(std::string);
 		int addRemoteFile(std::string, int);
 

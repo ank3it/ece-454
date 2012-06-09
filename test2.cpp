@@ -1,11 +1,19 @@
 #include <iostream>
-#include "local_peer.h"
+#include "file.h"
+#include <sstream>
 
 int main() {
 	std::cout << "test2.cpp" << std::endl;
 
-	LocalPeer lp;
-	lp.insert("in.jpg");
+	File f("tmp.txt", 5, true);
+	std::stringstream ss;
+	ss << f;
+	std::cout << ss.str() << std::endl;
+
+	File newf;
+	std::cout << newf << std::endl;
+	ss >> newf;
+	std::cout << newf << std::endl;
 
 	return 0;
 }

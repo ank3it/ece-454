@@ -25,6 +25,10 @@ FileManager::~FileManager() {
 	}
 }
 
+File* FileManager::getFile(std::string filename) {
+	return _filesTable[filename];
+}
+
 /*
  * Copy the given file to the location where all replicated files are stored
  * and add it to the set of managed files.

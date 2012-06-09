@@ -30,6 +30,8 @@ class LocalPeer : public Thread {
 		int leave();
 		// End of required interface
 
+		void broadcastFileNotification(std::string);
+
 	private:
 		unsigned short _portNumber;
 		Peers _peers;

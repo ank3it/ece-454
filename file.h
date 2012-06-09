@@ -12,6 +12,7 @@
 
 class File {
 	public:
+		File();
 		File(std::string, int, bool);
 		~File();
 
@@ -22,6 +23,9 @@ class File {
 		std::string _filename;
 		int _totalChunks;
 		bool* _isAvailable;
+
+	friend std::ostream& operator<<(std::ostream&, File const&);
+	friend std::istream& operator>>(std::istream&, File&);
 };
 
 #endif /* _FILE_H_ */
