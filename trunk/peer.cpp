@@ -4,8 +4,10 @@
  * Description: Implementation for the Peer class.
  */
 
-#include "peer.h"
 #include <sstream>
+#include "peer.h"
+#include "constants.h"
+#include "util.h"
 #include <iostream>	// remove
 
 Peer::Peer() : 
@@ -32,6 +34,7 @@ bool Peer::connect() {
 		_state = connected;
 		return true;
 	} else {
+		_state = disconnected;
 		return false;
 	}
 }
@@ -40,6 +43,8 @@ bool Peer::connect() {
  * Close socket connection to peer.
  */
 void Peer::disconnect() {
+	Log::info("in Peer::disconnect()");
+	stopThread();
 	_socket.closeConnection();
 	_state = disconnected;
 }
@@ -65,10 +70,16 @@ void Peer::sendMessage(Message& msg) {
  * queue.
  */
 void Peer::run() {
+	Log::info("in Peer::run()");
 	while (true) {
+		if (_state != connected)
+			continue;
+
+		Log::info("trying to receive data from peer");
+
 		// Retrieve the size of the data frame to follow
-		char sizeBuffer[SIZE_BUFFER_SIZE];
-		_socket.receiveData(sizeBuffer, SIZE_BUFFER_SIZE);
+		char sizeBuffer[constants::SIZE_BUFFER_SIZE];
+		_socket.receiveData(sizeBuffer, constants::SIZE_BUFFER_SIZE);
 		
 		// Now retreive actual data frame
 		int size = ntohl(*(int *)sizeBuffer);

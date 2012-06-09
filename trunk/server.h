@@ -12,7 +12,7 @@ class Server : public Thread {
 		~Server();
 
 		bool startServer();
-		bool stopServer();
+		void stopServer();
 
 	private:
 		ServerSocket* _serverSocket;

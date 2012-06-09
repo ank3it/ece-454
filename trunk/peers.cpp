@@ -11,6 +11,7 @@
 #include "return_codes.h"
 #include "constants.h"
 #include "peers.h"
+#include "util.h"
 #include <iostream> // remove
 
 Peers::Peers() {
@@ -36,6 +37,7 @@ Peers::~Peers() {
  * 			  port numbers of the peers
  */
 int Peers::initialize(std::string peersFile) {
+	Log::info("in Peers::initialize()");
 	std::ifstream file;
 	std::string lineItem;
 	std::string ipAddress;
@@ -62,6 +64,8 @@ int Peers::initialize(std::string peersFile) {
 		Peer* p = new Peer();
 		p->setIpAddress(ipAddress);
 		p->setPortNumber(portNumber);
+		p->setState(Peer::disconnected);
+		_peers.push_back(p);
 		++numPeers;
 	}
 

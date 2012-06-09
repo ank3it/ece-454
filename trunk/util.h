@@ -16,4 +16,11 @@ class Util {
 		static std::string generateUniqueFilename(std::string, std::string);
 };
 
+class Log {
+	public:
+		static void info(std::string);
+		static void warn(std::string);
+		static void error(std::string);
+};
+
 #endif /* _UTIL_H_ */

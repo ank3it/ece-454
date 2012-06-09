@@ -5,27 +5,45 @@
  */
 
 #include "thread.h"
+#include "util.h"
+
+Thread::Thread() : _cancelFlag(false) {
+	Log::info("Thread constructor()");
+	pthread_mutex_init(&_cancelFlagMutex, NULL);
+}
 
 /*
  * Creates a new thread and starts execution in the new thread. Returns true if
  * the thread was started successfully.
  */
 bool Thread::startThread() {
-	return (pthread_create(&_threadId, NULL, &executeRun, this) == 0);
+	pthread_attr_t attr;
+	pthread_attr_init (&attr);
+	pthread_attr_setdetachstate (&attr, PTHREAD_CREATE_DETACHED);
+	bool result = (pthread_create(&_threadId, NULL, &executeRun, this) == 0);
+	pthread_attr_destroy (&attr);
+	
+	return result;
 }
 
 /*
- * Cancels the running thread. Returns true if the thread was cancelled.
+ * Sets the cacel flag to true;
  */
-bool Thread::stopThread() {
-	return (pthread_cancel(_threadId) == 0);
+void Thread::stopThread() {
+	Log::info("in stopThread()");
+	
+	pthread_mutex_lock(&_cancelFlagMutex);
+	_cancelFlag = true;
+	pthread_mutex_unlock(&_cancelFlagMutex);
 }
 
-/*
- * Causes the caller to wait until the thread has completed execution
- */
-void Thread::waitForThread() {
-	pthread_join(_threadId, NULL);
+bool Thread::isCancelFlagSet() {
+	bool result = false;
+	pthread_mutex_lock(&_cancelFlagMutex);
+	result = _cancelFlag;
+	pthread_mutex_unlock(&_cancelFlagMutex);
+	
+	return result;
 }
 
 /*

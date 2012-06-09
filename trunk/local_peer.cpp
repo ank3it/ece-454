@@ -14,14 +14,14 @@
 #include "message.h"
 #include <sstream>
 #include <cmath>
-#include <iostream> // remove
 
 /*
  * Constructor. Creates new ServerSocket and Server objects using the default
  * port number.
  */
 LocalPeer::LocalPeer() {
-	std::cout << "LocalPeer constructor()" << std::endl;
+	Log::info("LocalPeer() constructor");
+
 	_serverSocket = new ServerSocket(constants::DEFAULT_PORT_NUMBER);
 	_server = new Server(_serverSocket, &_peers);
 }
@@ -33,7 +33,8 @@ LocalPeer::LocalPeer() {
  * portNum: The portNumber on which this local peer will listen for connections.
  */
 LocalPeer::LocalPeer(unsigned short portNum) : _portNumber(portNum) {
-	std::cout << "LocalPeer constructor(portNum)" << std::endl;
+	Log::info("LocalPeer constructor(portNum)");
+
 	_serverSocket = new ServerSocket(_portNumber);
 	_server = new Server(_serverSocket, &_peers);
 }
@@ -42,8 +43,10 @@ LocalPeer::LocalPeer(unsigned short portNum) : _portNumber(portNum) {
  * Destructor
  */
 LocalPeer::~LocalPeer() {
-	std::cout << "LocalPeer destructor()" << std::endl;
+	Log::info("LocalPeer destructor()");
 	stopThread();
+	Log::info("after waitForThread() call");
+	
 	_serverSocket->closeConnection();
 	delete _server;
 	delete _serverSocket;
@@ -57,8 +60,17 @@ LocalPeer::~LocalPeer() {
  * filepath: The file to be replicated
  */
 int LocalPeer::insert(std::string filepath) {
-	_fileManager.addLocalFile(filepath);
+	Log::info("insert()");
+
+	int rc = _fileManager.addLocalFile(filepath);
+	if (rc != 0) {
+		Log::error("Could not add file");
+		return rc;
+	}
+		
+	Log::info("after addLocalFile() call");
 	broadcastFileNotification(Util::extractFilename(filepath));
+	Log::info("after broadcastFileNotification() call");
 }
 
 int LocalPeer::query(Status& status) {
@@ -71,6 +83,7 @@ int LocalPeer::query(Status& status) {
  * have that are not present locally.
  */
 int LocalPeer::join() {
+	Log::info("in join()");
 	_peers.initialize(constants::PEERS_LIST);
 	int returnCode = _peers.connectToAllPeers();
 
@@ -86,6 +99,8 @@ int LocalPeer::join() {
 		broadcastFileNotification(it->first);
 	}
 
+	Log::info("return from join() with OK");
+
 	return returnCode;
 }
 
@@ -96,6 +111,7 @@ int LocalPeer::join() {
  */
 int LocalPeer::leave() {
 	broadcastLeaveNotification();
+	_server->stopServer();
 
 	for (int i = 0; i < _peers.getNumPeers(); i++) {
 		_peers(i).disconnect();
@@ -110,10 +126,14 @@ int LocalPeer::leave() {
  * filename: The name of the file
  */
 void LocalPeer::broadcastFileNotification(std::string filename) {
+	Log::info("in broadcastFileNotification()");
 	// Construct message
 	std::stringstream ss;
 	ss << *(_fileManager.getFile(filename));
+	Log::info("file serialized");
 	Message m(Message::FILE_NOTIFICATION, ss.str());
+
+	Log::info("message created");
 
 	// Iterate through all peers, sending them the message
 	std::list<Peer*>* peersList = _peers.getPeersList();
@@ -141,9 +161,11 @@ void LocalPeer::broadcastLeaveNotification() {
  * sends out file chunk requests to other peers.
  */
 void LocalPeer::run() {
-	// Process messages from peers
-	std::list<Peer*>* peersList = _peers.getPeersList();
 	while (true) {
+		if (isCancelFlagSet())
+			return;
+			
+		std::list<Peer*>* peersList = _peers.getPeersList();
 		std::list<Peer*>::iterator it;
 
 		for (it = peersList->begin(); it != peersList->end(); ++it) {
@@ -155,6 +177,8 @@ void LocalPeer::run() {
 				switch(m.getMessageType()) {
 					case Message::LEAVE_NOTIFICATION:
 						// Remove peer from list of peers
+						Log::info("received leave notification");
+						(*it)->disconnect();
 						peersList->erase(it++);
 						continue;
 						break;

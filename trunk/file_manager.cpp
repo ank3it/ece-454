@@ -12,12 +12,14 @@
 #include "util.h"
 #include "file_chunk.h"
 #include <iostream> // remove
+#include <sstream> // remove
 
 /*
  * Destructor. Iterates through the files tables and delete all the dynamically 
  * allocated File objects.
  */
 FileManager::~FileManager() {
+	Log::info("FileManager destructor()");
 	std::map<std::string, File*>::iterator it;
 
 	for (it = _filesTable.begin(); it != _filesTable.end(); ++it) {
@@ -25,12 +27,27 @@ FileManager::~FileManager() {
 	}
 }
 
+/*
+ * Returns a pointer to the given File object if it exists.
+ *
+ * filename: The requested File object.
+ */
 File* FileManager::getFile(std::string filename) {
-	return _filesTable[filename];
+	Log::info("in getFile()");
+	Log::info("filename = " + filename);
+	if (exists(filename)) {
+		return _filesTable[filename];
+	} else
+		return NULL;
 }
 
+/*
+ * Returns true if the given file exists in the files table.
+ *
+ * filename: The file to check for
+ */
 bool FileManager::exists(std::string filename) {
-	return (_filesTable.count(filename) == 0);
+	return (_filesTable.count(filename) > 0);
 }
 
 /*
@@ -40,12 +57,17 @@ bool FileManager::exists(std::string filename) {
  * filepath: The path to the file to be added
  */
 int FileManager::addLocalFile(std::string filepath) {
+	Log::info("in addLocalFile()");
+	Log::info("filepath = " + filepath);
+
 	char* buffer;
 	std::ifstream inFile(filepath.c_str(), 
 		std::ios::in | std::ios::binary | std::ios::ate);
 
 	if (!inFile.is_open())
 		return returnCodes::ERROR_FILE_NOT_FOUND;
+
+	Log::info("was able to open file");
 
 	// Copy file
 	// Read file into buffer
@@ -54,19 +76,22 @@ int FileManager::addLocalFile(std::string filepath) {
 
 	inFile.seekg(0, std::ios::beg);
 	inFile.read(buffer, size);
+	inFile.close();
 
 	// Write file from buffer
 	std::string filename = Util::extractFilename(filepath);
+	Log::info("filename = " + filename);
 	std::string outFilename = Util::generateUniqueFilename(
 		constants::FILES_DIR, filename);
+	Log::info("outFilename = " + outFilename);
 
 	std::ofstream outFile(outFilename.c_str(), 
 		std::ios::out | std::ios::binary);
 
-	inFile.close();
-
 	if (!outFile.is_open())
 		return returnCodes::ERROR_UNKNOWN;
+	
+	Log::info("was able to open output file");
 
 	outFile.write(buffer, size);
 	outFile.close();
@@ -77,6 +102,8 @@ int FileManager::addLocalFile(std::string filepath) {
 	int numberOfChunks = ceil((double)size / (double)constants::CHUNK_SIZE);
 	File* file = new File(filename, numberOfChunks, true, size);
 	_filesTable[filename] = file;
+
+	Log::info("added file to files table");
 
 	return returnCodes::OK;
 }
