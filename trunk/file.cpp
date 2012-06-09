@@ -9,7 +9,8 @@
 #include "file.h"
 #include "constants.h"
 
-File::File() : _filename(""), _totalChunks(0), _isAvailable(0) {
+File::File() : 
+_filename(""), _numChunks(0), _totalChunks(0), _isAvailable(0), _fileSize(0) {
 	// Empty
 }
 
@@ -21,8 +22,8 @@ File::File() : _filename(""), _totalChunks(0), _isAvailable(0) {
  * isAvailable: Whether the file is available locally (i.e. if we have any
  * chunks of the file available or not)
  */
-File::File(std::string fn, int tc, bool isAvailable) 
-: _filename(fn), _totalChunks(tc) {
+File::File(std::string fn, int tc, bool isAvailable, int fs) 
+: _filename(fn), _numChunks(tc), _totalChunks(tc), _fileSize(fs) {
 	_isAvailable = new bool[_totalChunks];
 
 	if (isAvailable) {
@@ -47,15 +48,14 @@ File::~File() {
  * Read in the specified chunk into the given buffer. Returns true if something
  * was read.
  *
- * chunkIndex: Zero-based index of the chunk to be read
- * buffer: The buffer in which the chunk data will be returned
- * size: The size of the data to be read
+ * fc: A FileChunk object with data such as chunk index and data size filled in.
+ * The read data will also be returned in this object.
  */
-bool File::readChunk(int chunkIndex, char* buffer, int size) {
-	if (chunkIndex >= _totalChunks)
+bool File::readChunk(FileChunk& fc) {
+	if (fc.getChunkIndex() >= _totalChunks)
 		return false;
 
-	if (!_isAvailable[chunkIndex])
+	if (!_isAvailable[fc.getChunkIndex()])
 		return false;
 
 	std::fstream inFile(_filename.c_str(), 
@@ -64,10 +64,10 @@ bool File::readChunk(int chunkIndex, char* buffer, int size) {
 	if (!inFile.is_open())
 		return false;
 
-	int offset = chunkIndex * constants::CHUNK_SIZE;
+	int offset = fc.getChunkIndex() * constants::CHUNK_SIZE;
 	inFile.seekg(offset);
 
-	inFile.read(buffer, size);
+	inFile.read(fc.getData(), fc.getDataSize());
 	inFile.close();
 
 	return true;
@@ -77,12 +77,10 @@ bool File::readChunk(int chunkIndex, char* buffer, int size) {
  * Write the buffer to the specified chunk. Returns true if something was 
  * written.
  *
- * chunkIndex: Zero-based index of the chunk to be written
- * buffer: The buffer that contains the chunk data
- * size: The size of the data to be written
+ * chunk: A FileChunk object containing the data to be written
  */
-bool File::writeChunk(int chunkIndex, char* buffer, int size) {
-	if (chunkIndex >= _totalChunks)
+bool File::writeChunk(FileChunk& fc) {
+	if (fc.getChunkIndex() >= _totalChunks)
 		return false;
 
 	std::fstream outFile(_filename.c_str(), 
@@ -91,14 +89,15 @@ bool File::writeChunk(int chunkIndex, char* buffer, int size) {
 	if (!outFile.is_open())
 		return false;
 
-	int offset = chunkIndex * constants::CHUNK_SIZE;
+	int offset = fc.getChunkIndex() * constants::CHUNK_SIZE;
 	outFile.seekp(offset);
 
-	outFile.write(buffer, size);
+	outFile.write(fc.getData(), fc.getDataSize());
 	outFile.close();
 
 	// Mark chunk as available
-	_isAvailable[chunkIndex] = true;
+	_isAvailable[fc.getChunkIndex()] = true;
+	_numChunks++;
 
 	return true;
 }
@@ -111,6 +110,7 @@ std::ostream& operator<<(std::ostream& os,  File const& file) {
 	for (int i = 0; i < file._totalChunks; ++i) {
 		os  << file._isAvailable[i] << " ";
 	}
+	os << "_FILE_SIZE_ " << file._fileSize << " ";
 	os << "_END_FILE_ ";
 
 	return os;
@@ -133,6 +133,8 @@ std::istream& operator>>(std::istream& is, File& file) {
 				for (int i = 0; i < file._totalChunks; ++i) {
 					is >> file._isAvailable[i];
 				}
+			} else if (str.compare("_FILE_SIZE_") == 0) {
+				is >> file._fileSize;
 			}
 		} while (str.compare("_END_FILE_") != 0);
 	} else {

@@ -3,16 +3,12 @@
 #include <cstdlib>
 
 Message::Message() : 
-_senderIpAddress(""), 
-_senderPortNumber(0), 
 _messageType(Message::UNKNOWN), 
 _messageBody("") {
 	// Empty
 }
 
-Message::Message(std::string ipa, int pn, int mt, std::string mb) :	
-_senderIpAddress(ipa), 
-_senderPortNumber(pn), 
+Message::Message(int mt, std::string mb) :	
 _messageType(mt), 
 _messageBody(mb) {
 	// Empty
@@ -20,8 +16,6 @@ _messageBody(mb) {
 
 std::ostream& operator<<(std::ostream& os, Message const& msg) {
 	os << "_START_MESSAGE_ ";
-	os << "_SENDER_IP_ADDRESS_ " << msg._senderIpAddress << " ";
-	os << "_SENDER_PORT_NUMBER_ " << msg._senderPortNumber << " ";
 	os << "_MESSAGE_TYPE_ " << msg._messageType << " ";
 	os << "_START_MESSAGE_BODY_ " << msg._messageBody << " _END_MESSAGE_BODY_ ";
 	os << "_END_MESSAGE_ ";
@@ -37,11 +31,7 @@ std::istream& operator>>(std::istream& is, Message& msg) {
 		do {
 			is >> tmpStr;
 
-			if (tmpStr.compare("_SENDER_IP_ADDRESS_") == 0) {
-				is >> msg._senderIpAddress;
-			} else if (tmpStr.compare("_SENDER_PORT_NUMBER_") == 0) {
-				is >> msg._senderPortNumber;
-			} else if (tmpStr.compare("_MESSAGE_TYPE_") == 0) {
+			if (tmpStr.compare("_MESSAGE_TYPE_") == 0) {
 				is >> msg._messageType;
 			} else if (tmpStr.compare("_START_MESSAGE_BODY_") == 0) {
 				std::string msgBody;

@@ -7,20 +7,12 @@ int main() {
 	std::cout << "test.cpp" << std::endl;
 
 	std::stringstream ss;
-	char buf[] = "hello";
-	FileChunk fc("tmp.txt", 2, 24, buf, 5);
-	std::cout << fc << std::endl << std::endl;
-	ss << fc;
-
-	Message m("127.0.0.1", 8080, Message::FILE_CHUNK, ss.str());
-	std::stringstream ss2;
-	ss2 << m;
-	std::cout << ss2.str() << std::endl << std::endl;
-
-	Message n;
-	ss2 >> n;
-
-	std::cout << n << std::endl << std::endl;
+	ss << "this test";
+	std::string s;
+	ss >> s;
+	std::cout << s << std::endl;
+	ss >> s;
+	std::cout << s << std::endl;
 
 	return 0;
 }

@@ -11,6 +11,7 @@
 #include <string>
 #include <map>
 #include "file.h"
+#include "file_chunk.h"
 
 class FileManager {
 	public:
@@ -21,8 +22,11 @@ class FileManager {
 
 		File* getFile(std::string);
 		std::map<std::string, File*>* getFilesTable() { return &_filesTable; }
+		bool exists(std::string filename);
 		int addLocalFile(std::string);
-		int addRemoteFile(std::string, int);
+		int addRemoteFile(std::string, int, int);
+		void addChunkToFile(FileChunk&);
+		bool getChunkFromFile(FileChunk&);
 
 	private:
 		std::map<std::string, File*> _filesTable;

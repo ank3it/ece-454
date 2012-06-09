@@ -6,23 +6,19 @@
 class Message {
 	public:
 		Message(); 
-		Message(std::string, int, int, std::string);
+		Message(int, std::string);
 		
+		// Message types
 		const static int UNKNOWN = 0;
-		const static int JOIN_NOTIFICATION = 1;
-		const static int LEAVE_NOTIFICATION = 2;
-		const static int FILE_CHUNK = 3;
-		const static int FILE_CHUNK_REQUEST = 4;
-		const static int FILE_NOTIFICATION = 5;
+		const static int LEAVE_NOTIFICATION = 1;
+		const static int FILE_CHUNK = 2;
+		const static int FILE_CHUNK_REQUEST = 3;
+		const static int FILE_NOTIFICATION = 4;
 
-		std::string getSenderIpAddress() { return _senderIpAddress; }
-		int getSenderPortNumber() { return _senderPortNumber; }
 		int getMessageType() { return _messageType; }
 		std::string getMessageBody() { return _messageBody; }
 
 	private:
-		std::string _senderIpAddress;
-		int _senderPortNumber;
 		int _messageType;
 		std::string _messageBody;
 		

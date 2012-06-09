@@ -29,6 +29,10 @@ File* FileManager::getFile(std::string filename) {
 	return _filesTable[filename];
 }
 
+bool FileManager::exists(std::string filename) {
+	return (_filesTable.count(filename) == 0);
+}
+
 /*
  * Copy the given file to the location where all replicated files are stored
  * and add it to the set of managed files.
@@ -71,7 +75,7 @@ int FileManager::addLocalFile(std::string filepath) {
 
 	// Create File object and adds to files table
 	int numberOfChunks = ceil((double)size / (double)constants::CHUNK_SIZE);
-	File* file = new File(filename, numberOfChunks, true);
+	File* file = new File(filename, numberOfChunks, true, size);
 	_filesTable[filename] = file;
 
 	return returnCodes::OK;
@@ -81,11 +85,37 @@ int FileManager::addLocalFile(std::string filepath) {
  * Create a File object for the remote file and add it to the files table if it
  * does not already exist.
  */
-int FileManager::addRemoteFile(std::string filepath, int numberOfChunks) {
+int FileManager::addRemoteFile(std::string filepath, int numberOfChunks, int fileSize) {
 	if (_filesTable.count(filepath) == 0) {
-		File* file = new File(filepath, numberOfChunks, false);
+		File* file = new File(filepath, numberOfChunks, false, fileSize);
+		file->_numChunks = 0;
+
 		_filesTable[filepath] = file;
 	}
 
 	return returnCodes::OK;
+}
+
+/*
+ * Write the given chunk to file.
+ *
+ * fc: A filled FileChunk object
+ */
+void FileManager::addChunkToFile(FileChunk& fc) {
+	if (_filesTable.count(fc.getFilename()) > 0) {
+		_filesTable[fc.getFilename()]->writeChunk(fc);
+	}
+}
+
+/*
+ * Read a chunk from file.
+ *
+ * fc: A partly filled FileChunk object
+ */
+bool FileManager::getChunkFromFile(FileChunk& fc) {
+	if (_filesTable.count(fc.getFilename()) != 0)
+		return false;
+	
+	_filesTable[fc.getFilename()]->readChunk(fc);
+	return true;
 }

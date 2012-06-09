@@ -15,10 +15,17 @@ class FileChunk {
 		FileChunk(std::string, int, int, char*, int);
 		~FileChunk();
 
+		std::string getFilename() { return _filename; }
+		int getChunkIndex() { return _chunkIndex; }
+		int getTotalChunks() { return _totalChunks; }
+		int getDataSize() { return _dataSize; }
+		char* getData() { return _data; }
+
+	private:
 		std::string _filename;
 		int _chunkIndex;
 		int _totalChunks;
-		int _dataSize;		// Size of chunk, will usually be chunkSize
+		int _dataSize;		// Size of chunk, will usually equal chunk size
 		char* _data;		// Holds the file chunk data
 
 	friend std::ostream& operator<<(std::ostream&, FileChunk const&);
