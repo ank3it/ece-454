@@ -10,6 +10,9 @@
 #include "return_codes.h"
 #include "util.h"
 #include "constants.h"
+#include "queue/concurrent_queue.h"
+#include "message.h"
+#include <sstream>
 #include <iostream> // remove
 
 /*
@@ -39,6 +42,7 @@ LocalPeer::LocalPeer(unsigned short portNum) : _portNumber(portNum) {
  */
 LocalPeer::~LocalPeer() {
 	std::cout << "LocalPeer destructor()" << std::endl;
+	stopThread();
 	_serverSocket->closeConnection();
 	delete _server;
 	delete _serverSocket;
@@ -53,8 +57,7 @@ LocalPeer::~LocalPeer() {
  */
 int LocalPeer::insert(std::string filepath) {
 	_fileManager.addLocalFile(filepath);
-
-	// Broadcast file notification messages
+	broadcastFileNotification(Util::extractFilename(filepath));
 }
 
 int LocalPeer::query(Status& status) {
@@ -67,31 +70,22 @@ int LocalPeer::query(Status& status) {
  * have that are not present locally.
  */
 int LocalPeer::join() {
-	int peersConnected = 0;
 	_peers.initialize(constants::PEERS_LIST);
-
-	// Connect to each Peer in Peers container
-	for (int i = 0; i < _peers.getNumPeers(); i++) {
-		if (_peers(i).connect()) {
-			peersConnected++;
-
-			// Start Peer thread so we can begin receiving data from the peer
-			if (!_peers(i).startThread())
-				return returnCodes::ERROR_UNKNOWN;
-		}
-	}
-
-	if (peersConnected == 0)
-		return returnCodes::ERROR_CANNOT_CONNECT;
+	int returnCode = _peers.connectToAllPeers();
 
 	// Start server so it can begin accepting connections
 	if (!_server->startServer())
 		return returnCodes::ERROR_UNKNOWN;
 
-	if (peersConnected < _peers.getNumPeers())
-		return returnCodes::WARNING_PEER_NOT_FOUND;
+	// TODO: Broadcast files to peers
+	std::map<std::string, File*>* ft = _fileManager.getFilesTable();
+	std::map<std::string, File*>::iterator it;
 
-	return returnCodes::OK;
+	for (it = ft->begin(); it != ft->end(); ++it){
+		broadcastFileNotification(it->first);
+	}
+
+	return returnCode;
 }
 
 /*
@@ -101,7 +95,7 @@ int LocalPeer::join() {
  */
 int LocalPeer::leave() {
 	for (int i = 0; i < _peers.getNumPeers(); i++) {
-		// Push chunks to peers
+		// TODO: Push chunks to peers
 
 		_peers(i).disconnect();
 	}
@@ -110,9 +104,59 @@ int LocalPeer::leave() {
 }
 
 /*
- * Implemented from Thread class. Runs in another thread. Process messages
+ * Notifies the other peers about the given file
+ *
+ * filename: The name of the file
+ */
+void LocalPeer::broadcastFileNotification(std::string filename) {
+	// Construct message
+	std::stringstream ss;
+	ss << *(_fileManager.getFile(filename));
+	Message m(Util::getIpAddress(), 
+			  Util::getPortNumber(), 
+			  Message::FILE_NOTIFICATION, 
+			  ss.str());
+
+	// Iterate through all peers, sending them the message
+	std::list<Peer*>* peersList = _peers.getPeersList();
+	std::list<Peer*>::iterator it;
+
+	for (it = peersList->begin(); it != peersList->end(); ++it)
+		(*it)->sendMessage(m);
+}
+
+/*
+ * Inherited from Thread class. Runs in another thread. Process messages
  * received from other peers by checking each peer's receive message queue.
  */
 void LocalPeer::run() {
 	// Process messages from peers
+	std::list<Peer*>* peersList = _peers.getPeersList();
+	while (true) {
+		std::list<Peer*>::iterator it;
+
+		for (it = peersList->begin(); it != peersList->end(); ++it) {
+			ConcurrentQueue<Message>* q = (*it)->getReceiveQueue();
+			Message m;
+
+			if (q->tryPop(m)) {
+				switch(m.getMessageType()) {
+					case Message::JOIN_NOTIFICATION:
+						// Do Something
+						break;
+					case Message::LEAVE_NOTIFICATION:
+						// Do Something
+						break;
+					case Message::FILE_CHUNK:
+						// Do Something
+						break;
+					case Message::FILE_CHUNK_REQUEST:
+						// Do Something
+						break;
+					default:
+						break;
+				}
+			}
+		}
+	}
 }

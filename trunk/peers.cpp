@@ -73,6 +73,32 @@ int Peers::initialize(std::string peersFile) {
 }
 
 /*
+ * Attempts to connect to all known peers by iterating through the list of 
+ * peers. Starts the threads associated with each peer as well.
+ */
+int Peers::connectToAllPeers() {
+	int peersConnected = 0;
+	std::list<Peer*>::iterator it = _peers.begin();
+
+	while (it != _peers.end()) {
+		if ((*it)->connect()) {
+			peersConnected++;
+
+			// Start Peer thread so we can begin receiving data from the peer
+			if (!(*it)->startThread())
+				return returnCodes::ERROR_UNKNOWN;
+
+			++it;
+		} else {
+			// Unable to connect, remove Peer from the list of peers
+			_peers.erase(it++);
+		}
+	}
+
+	return returnCodes::OK;
+}
+
+/*
  * Returns a reference to the Peer object specified by the given index
  */
 Peer& Peers::operator()(int i) {

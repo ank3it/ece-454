@@ -4,6 +4,11 @@
  * Description: Implementation for the Util class.
  */
 
+#include <sys/unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include "util.h"
 
 /*
@@ -29,4 +34,18 @@ std::string Util::extractFilename(std::string filepath) {
  */
 std::string Util::generateUniqueFilename(std::string path, std::string filename) {
 	return path + "/" + filename;
+}
+
+std::string Util::getIpAddress() {
+	char hostname[128];
+	gethostname(hostname, sizeof(hostname));
+
+	struct hostent* host;
+
+	host = gethostbyname(hostname);
+	return inet_ntoa(*((struct in_addr*)host->h_addr));
+}
+
+int Util::getPortNumber() {
+	return 0;
 }

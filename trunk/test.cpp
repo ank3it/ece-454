@@ -22,13 +22,5 @@ int main() {
 
 	std::cout << n << std::endl << std::endl;
 
-	FileChunk fc2;
-	std::stringstream ss3;
-	ss3 << n._messageBody;
-	std::cout << ss3.str() << std::endl << std::endl;
-
-	ss3 >> fc2;
-	std::cout << fc2 << std::endl;
-
 	return 0;
 }

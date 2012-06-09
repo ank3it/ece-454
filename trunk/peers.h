@@ -29,7 +29,9 @@ class Peers {
 		// incorrectly formatted. After execution of this method, the _peers 
 		// should be present.
 		int initialize(std::string peersFile);
+		int connectToAllPeers();
 		Peer& operator()(int i);		
+		std::list<Peer*>* getPeersList() { return &_peers; }
 		int getNumPeers() const { return _peers.size(); }
 		
 	private:

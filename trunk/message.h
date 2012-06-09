@@ -13,7 +13,14 @@ class Message {
 		const static int LEAVE_NOTIFICATION = 2;
 		const static int FILE_CHUNK = 3;
 		const static int FILE_CHUNK_REQUEST = 4;
+		const static int FILE_NOTIFICATION = 5;
 
+		std::string getSenderIpAddress() { return _senderIpAddress; }
+		int getSenderPortNumber() { return _senderPortNumber; }
+		int getMessageType() { return _messageType; }
+		std::string getMessageBody() { return _messageBody; }
+
+	private:
 		std::string _senderIpAddress;
 		int _senderPortNumber;
 		int _messageType;

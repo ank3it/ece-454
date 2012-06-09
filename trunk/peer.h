@@ -24,6 +24,7 @@ class Peer : public Thread {
 		enum State { connected, disconnected, unknown };
 
 		State getState() const { return _state; }
+		ConcurrentQueue<Message>* getReceiveQueue() { return &_receiveQueue; }
 		void setIpAddress(std::string const ipAddress) { _ipAddress = ipAddress; }
 		void setPortNumber(int const value) { _portNumber = value; }
 		void setState(State const value) { _state = value; }
@@ -31,7 +32,6 @@ class Peer : public Thread {
 		bool connect();
 		void disconnect();
 		void sendMessage(Message&);
-		void run();
 
 	private:
 		std::string _ipAddress;
@@ -40,6 +40,8 @@ class Peer : public Thread {
 		pthread_t _threadId;
 		ConcurrentQueue<Message> _receiveQueue;
 		Socket _socket;
+
+		void run();
 };
 
 #endif  /* _PEER_H_ */

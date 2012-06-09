@@ -9,6 +9,10 @@
 #include "file.h"
 #include "constants.h"
 
+File::File() : _filename(""), _totalChunks(0), _isAvailable(0) {
+	// Empty
+}
+
 /*
  * Constructor. Initializes the file object to the given value
  *
@@ -97,4 +101,44 @@ bool File::writeChunk(int chunkIndex, char* buffer, int size) {
 	_isAvailable[chunkIndex] = true;
 
 	return true;
+}
+
+std::ostream& operator<<(std::ostream& os,  File const& file) {
+	os << "_START_FILE_ ";
+	os << "_FILENAME_ " << file._filename << " ";
+	os << "_TOTAL_CHUNKS_ " << file._totalChunks << " ";
+	os << "_IS_AVAILABLE_ ";
+	for (int i = 0; i < file._totalChunks; ++i) {
+		os  << file._isAvailable[i] << " ";
+	}
+	os << "_END_FILE_ ";
+
+	return os;
+}
+
+std::istream& operator>>(std::istream& is, File& file) {
+	std::string str;
+
+	is >> str;
+	if (str.compare("_START_FILE_") == 0) {
+		do {
+			is >> str;
+
+			if (str.compare("_FILENAME_") == 0) {
+				is >> file._filename;
+			} else if (str.compare("_TOTAL_CHUNKS_") == 0) {
+				is >> file._totalChunks;
+			} else if (str.compare("_IS_AVAILABLE_") == 0) {
+				file._isAvailable = new bool[file._totalChunks];
+				for (int i = 0; i < file._totalChunks; ++i) {
+					is >> file._isAvailable[i];
+				}
+			}
+		} while (str.compare("_END_FILE_") != 0);
+	} else {
+		// Reset stream get pointer position
+		is.seekg(-str.length(), std::ios::cur);
+	}
+
+	return is;
 }
