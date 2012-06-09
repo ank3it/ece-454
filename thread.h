@@ -3,7 +3,7 @@
  * Group: 14
  * Description: Header file for Thread abstract class. This abstract class
  * provides threading capbilities. The run() function must be implemented by
- * the derived class. Calling start() will start the thread.
+ * the derived class. Calling startThread() will start the thread.
  */
 
 #ifndef _THREAD_H_

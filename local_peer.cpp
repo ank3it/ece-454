@@ -13,6 +13,7 @@
 #include "queue/concurrent_queue.h"
 #include "message.h"
 #include <sstream>
+#include <cmath>
 #include <iostream> // remove
 
 /*
@@ -77,7 +78,7 @@ int LocalPeer::join() {
 	if (!_server->startServer())
 		return returnCodes::ERROR_UNKNOWN;
 
-	// TODO: Broadcast files to peers
+	// Broadcast files to peers
 	std::map<std::string, File*>* ft = _fileManager.getFilesTable();
 	std::map<std::string, File*>::iterator it;
 
@@ -94,9 +95,9 @@ int LocalPeer::join() {
  * peers before leaving if there is a small number of them.
  */
 int LocalPeer::leave() {
-	for (int i = 0; i < _peers.getNumPeers(); i++) {
-		// TODO: Push chunks to peers
+	broadcastLeaveNotification();
 
+	for (int i = 0; i < _peers.getNumPeers(); i++) {
 		_peers(i).disconnect();
 	}
 
@@ -112,10 +113,7 @@ void LocalPeer::broadcastFileNotification(std::string filename) {
 	// Construct message
 	std::stringstream ss;
 	ss << *(_fileManager.getFile(filename));
-	Message m(Util::getIpAddress(), 
-			  Util::getPortNumber(), 
-			  Message::FILE_NOTIFICATION, 
-			  ss.str());
+	Message m(Message::FILE_NOTIFICATION, ss.str());
 
 	// Iterate through all peers, sending them the message
 	std::list<Peer*>* peersList = _peers.getPeersList();
@@ -126,8 +124,21 @@ void LocalPeer::broadcastFileNotification(std::string filename) {
 }
 
 /*
+ * Notifies the other peers that the peer is leaving the network.
+ */
+void LocalPeer::broadcastLeaveNotification() {
+	Message m(Message::LEAVE_NOTIFICATION, "");
+	std::list<Peer*>* peersList = _peers.getPeersList();
+	std::list<Peer*>::iterator it;
+
+	for (it = peersList->begin(); it != peersList->end(); ++it)
+		(*it)->sendMessage(m);
+}
+
+/*
  * Inherited from Thread class. Runs in another thread. Process messages
- * received from other peers by checking each peer's receive message queue.
+ * received from other peers by checking each peer's receive message queue. Also
+ * sends out file chunk requests to other peers.
  */
 void LocalPeer::run() {
 	// Process messages from peers
@@ -139,23 +150,100 @@ void LocalPeer::run() {
 			ConcurrentQueue<Message>* q = (*it)->getReceiveQueue();
 			Message m;
 
+			// Check peer's receive queue
 			if (q->tryPop(m)) {
 				switch(m.getMessageType()) {
-					case Message::JOIN_NOTIFICATION:
-						// Do Something
-						break;
 					case Message::LEAVE_NOTIFICATION:
-						// Do Something
+						// Remove peer from list of peers
+						peersList->erase(it++);
+						continue;
 						break;
 					case Message::FILE_CHUNK:
-						// Do Something
+					{
+						// Extract FileChunk object
+						std::stringstream ss;
+						ss << m.getMessageBody();
+						FileChunk fc;
+						ss >> fc;
+
+						// Write FileChunk to file
+						_fileManager.addChunkToFile(fc);
+					}
 						break;
 					case Message::FILE_CHUNK_REQUEST:
-						// Do Something
+					{
+						std::stringstream ss;
+						std::string filename;
+						int chunkIndex = 0;
+						int totalChunks = 0;
+						int dataSize = 0;
+
+						ss << m.getMessageBody();
+						ss >> filename;
+						ss >> chunkIndex;
+						ss >> totalChunks;
+						ss >> dataSize;
+
+						FileChunk fc(filename, chunkIndex, totalChunks, 0, 
+							dataSize);
+
+						if (!_fileManager.getChunkFromFile(fc)) {
+							std::stringstream ss2;
+							ss2 << fc;
+							Message m(Message::FILE_CHUNK, ss2.str());
+							(*it)->sendMessage(m);
+						}
+					}
+						break;
+					case Message::FILE_NOTIFICATION:
+					{
+						std::stringstream ss;
+						ss << m.getMessageBody();
+
+						File f;
+						ss >> f;
+						if (!_fileManager.exists(f.getFilename())) {
+							_fileManager.addRemoteFile(f.getFilename(), 
+								f.getTotalChunks(), f.getFileSize());
+						}
+					}
 						break;
 					default:
 						break;
 				}
+			}
+
+			// Send file chunk request
+			std::map<std::string, File*>* ft = _fileManager.getFilesTable();
+			std::map<std::string, File*>::iterator mit;
+
+			for (mit = ft->begin(); mit != ft->end(); ++mit) {
+				File* f = mit->second;
+				if (f->getNumChunks() == f->getTotalChunks()) 
+					continue;
+
+				for (int i = 0; i < f->getTotalChunks(); ++i) {
+					if (!f->isAvailable(i))
+						continue;
+
+					// Calculate chunk size
+					int dataSize = constants::CHUNK_SIZE;
+					if (i == f->getTotalChunks() - 1) {
+						dataSize = ceil(
+							(double)f->getFileSize() 
+							/ (double)constants::CHUNK_SIZE);
+					}
+
+					std::stringstream ss;
+					ss << f->getFilename() << " ";
+					ss << i << " ";
+					ss << f->getTotalChunks() << " ";
+					ss << f->getFileSize() << " ";
+
+					Message m(Message::FILE_CHUNK_REQUEST, ss.str());
+					(*it)->sendMessage(m);
+				}
+
 			}
 		}
 	}

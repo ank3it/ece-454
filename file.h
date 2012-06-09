@@ -9,20 +9,28 @@
 #define _FILE_H_
 
 #include <string>
+#include "file_chunk.h"
 
 class File {
 	public:
 		File();
-		File(std::string, int, bool);
+		File(std::string, int, bool, int);
 		~File();
 
-		bool readChunk(int, char*, int);
-		bool writeChunk(int, char*, int);
+		std::string getFilename() { return _filename; }
+		int getNumChunks() { return _numChunks; }
+		int getTotalChunks() { return _totalChunks; }
+		bool isAvailable(int i) { return _isAvailable[i]; }
+		bool* getIsAvailable() { return _isAvailable; }
+		int getFileSize() { return _fileSize; }
+		bool readChunk(FileChunk&);
+		bool writeChunk(FileChunk&);
 
-	private:
 		std::string _filename;
+		int _numChunks;
 		int _totalChunks;
 		bool* _isAvailable;
+		int _fileSize;
 
 	friend std::ostream& operator<<(std::ostream&, File const&);
 	friend std::istream& operator>>(std::istream&, File&);
