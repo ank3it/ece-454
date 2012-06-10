@@ -8,6 +8,7 @@
 #include "file_chunk.h"
 #include <cstring>
 #include <cstdlib>
+#include <sstream>
 #include <iostream>
 #include "util.h"
 
@@ -46,6 +47,57 @@ FileChunk::FileChunk(std::string fn, int ci, int tc, int ds)
  */
 FileChunk::~FileChunk() {
 	delete[] _data;
+}
+
+std::string FileChunk::serialize() {
+	std::stringstream ss;
+	std::string ss_str;
+	ss << "'" << _filename << "' ";
+	ss << _chunkIndex << " ";
+	ss << _totalChunks << " ";
+	ss << _dataSize << " ";
+
+	ss_str += ss.str();
+	
+	char* buf = _data;
+	for (int i = 0; i < _dataSize; i++)
+		ss_str += buf[i];
+	
+	return ss_str;
+}
+
+void FileChunk::deserialize(std::string str) {
+	Log::info("FileChunk::deserialize()");
+	int pos1 = str.find("'") + 1;
+	int pos2 = str.find("'", pos1);
+	_filename = str.substr(pos1, pos2 - pos1);
+
+	std::cout << "filename: |" << _filename << "|" << std::endl;
+	
+	pos1 = str.find(" ", pos2);
+	pos2 = str.find(" ", pos1 + 1);
+	_chunkIndex = atoi(str.substr(pos1 + 1, pos2 - pos1).data());
+	
+	std::cout << "chunkIndex: " << _chunkIndex << std::endl;
+	
+	pos1 = str.find(" ", pos2);
+	pos2 = str.find(" ", pos1 + 1);
+	_totalChunks = atoi(str.substr(pos1 + 1, pos2 - pos1).data());
+	
+	std::cout << "totalChunks: " << _totalChunks << std::endl;
+	
+	pos1 = str.find(" ", pos2);
+	pos2 = str.find(" ", pos1 + 1);
+	_dataSize = atoi(str.substr(pos1 + 1, pos2 - pos1).data());
+	_data = new char[_dataSize];
+	
+	std::cout << "dataSize: " << _dataSize << std::endl;
+	
+	pos1 = str.find(" ", pos2);
+	std::cout << "last space: " << pos1 << std::endl;
+	
+	for (int i = 0; i < _dataSize; i++)
+		_data[i] = str[pos1 + i];
 }
 
 /*
