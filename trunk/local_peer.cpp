@@ -60,7 +60,7 @@ LocalPeer::~LocalPeer() {
  * filepath: The file to be replicated
  */
 int LocalPeer::insert(std::string filepath) {
-	Log::info("insert()");
+	Log::info("in LocalPeer::insert()");
 
 	int rc = _fileManager.addLocalFile(filepath);
 	if (rc != 0) {
@@ -83,7 +83,7 @@ int LocalPeer::query(Status& status) {
  * have that are not present locally.
  */
 int LocalPeer::join() {
-	Log::info("in join()");
+	Log::info("in LocalPeer::join()");
 	_peers.initialize(constants::PEERS_LIST);
 	int returnCode = _peers.connectToAllPeers();
 
@@ -98,8 +98,9 @@ int LocalPeer::join() {
 	for (it = ft->begin(); it != ft->end(); ++it){
 		broadcastFileNotification(it->first);
 	}
-
-	Log::info("return from join() with OK");
+	
+	Log::info("About to start LocalPeer thread");
+	startThread();
 
 	return returnCode;
 }
@@ -110,6 +111,7 @@ int LocalPeer::join() {
  * peers before leaving if there is a small number of them.
  */
 int LocalPeer::leave() {
+	Log::info("in LocalPeer::leave()");
 	broadcastLeaveNotification();
 	_server->stopServer();
 
@@ -126,7 +128,7 @@ int LocalPeer::leave() {
  * filename: The name of the file
  */
 void LocalPeer::broadcastFileNotification(std::string filename) {
-	Log::info("in broadcastFileNotification()");
+	Log::info("in LocalPeer::broadcastFileNotification()");
 	// Construct message
 	std::stringstream ss;
 	ss << *(_fileManager.getFile(filename));
@@ -139,28 +141,34 @@ void LocalPeer::broadcastFileNotification(std::string filename) {
 	std::list<Peer*>* peersList = _peers.getPeersList();
 	std::list<Peer*>::iterator it;
 
-	for (it = peersList->begin(); it != peersList->end(); ++it)
-		(*it)->sendMessage(m);
+	for (it = peersList->begin(); it != peersList->end(); ++it) {
+		if ((*it)->getState() == Peer::connected)
+			(*it)->sendMessage(m);
+	}
 }
 
 /*
  * Notifies the other peers that the peer is leaving the network.
  */
 void LocalPeer::broadcastLeaveNotification() {
+	Log::info("in LocalPeer::broadcastLeaveNotification()");
 	Message m(Message::LEAVE_NOTIFICATION, "");
 	std::list<Peer*>* peersList = _peers.getPeersList();
 	std::list<Peer*>::iterator it;
 
-	for (it = peersList->begin(); it != peersList->end(); ++it)
-		(*it)->sendMessage(m);
+	for (it = peersList->begin(); it != peersList->end(); ++it) {
+		if ((*it)->getState() == Peer::connected)
+			(*it)->sendMessage(m);
+	}
 }
 
 /*
- * Inherited from Thread class. Runs in another thread. Process messages
+ * Inherited from Thread class. Runs in another thread. Processes messages
  * received from other peers by checking each peer's receive message queue. Also
  * sends out file chunk requests to other peers.
  */
 void LocalPeer::run() {
+	Log::info("in LocalPeer::run()");
 	while (true) {
 		if (isCancelFlagSet())
 			return;
@@ -174,6 +182,7 @@ void LocalPeer::run() {
 
 			// Check peer's receive queue
 			if (q->tryPop(m)) {
+				Log::info("TRYPOP() WORKED");
 				switch(m.getMessageType()) {
 					case Message::LEAVE_NOTIFICATION:
 						// Remove peer from list of peers
@@ -184,6 +193,7 @@ void LocalPeer::run() {
 						break;
 					case Message::FILE_CHUNK:
 					{
+						Log::info("received file chunk");
 						// Extract FileChunk object
 						std::stringstream ss;
 						ss << m.getMessageBody();
@@ -196,6 +206,7 @@ void LocalPeer::run() {
 						break;
 					case Message::FILE_CHUNK_REQUEST:
 					{
+						Log::info("received file chunk request");
 						std::stringstream ss;
 						std::string filename;
 						int chunkIndex = 0;
@@ -221,18 +232,22 @@ void LocalPeer::run() {
 						break;
 					case Message::FILE_NOTIFICATION:
 					{
+						Log::info("received file notification");
 						std::stringstream ss;
 						ss << m.getMessageBody();
+						Log::info("messagebody = " + ss.str());
 
 						File f;
 						ss >> f;
 						if (!_fileManager.exists(f.getFilename())) {
+							Log::info("file does not already exist, adding it to filemanager");
 							_fileManager.addRemoteFile(f.getFilename(), 
 								f.getTotalChunks(), f.getFileSize());
 						}
 					}
 						break;
 					default:
+						Log::info("received default");
 						break;
 				}
 			}

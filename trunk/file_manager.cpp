@@ -34,10 +34,10 @@ FileManager::~FileManager() {
  */
 File* FileManager::getFile(std::string filename) {
 	Log::info("in getFile()");
-	Log::info("filename = " + filename);
-	if (exists(filename)) {
+	Log::info("getFile() filename = " + filename);
+	if (exists(filename))
 		return _filesTable[filename];
-	} else
+	else
 		return NULL;
 }
 

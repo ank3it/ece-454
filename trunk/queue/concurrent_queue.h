@@ -12,6 +12,7 @@
 
 #include <pthread.h>
 #include <queue>
+#include "../util.h"
 
 /*
  * Provides a thread-safe generic implementation of a queue using pthread 
@@ -57,6 +58,7 @@ bool ConcurrentQueue<Object>::isEmpty() const {
  */
 template <typename Object>
 void ConcurrentQueue<Object>::push(Object const& obj) {
+	Log::info("in ConcurrentQueue::push()");
 	pthread_mutex_lock(&_queue_mutex);
 
 	_queue.push(obj);
@@ -98,8 +100,10 @@ template <typename Object>
 bool ConcurrentQueue<Object>::tryPop(Object& result) {
 	pthread_mutex_lock(&_queue_mutex);
 
-	if (_queue.empty()) 
+	if (_queue.empty()) {
+		pthread_mutex_unlock(&_queue_mutex);
 		return false;
+	}
 
 	result = _queue.front();
 	_queue.pop();

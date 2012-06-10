@@ -8,8 +8,10 @@ int main() {
 	std::cout << "test.cpp" << std::endl;
 
 	LocalPeer lp;
-	//lp.insert("/home/usman/working_dir/p1/in.jpg");
 	lp.join();
+	Log::info("joined");
+	lp.insert("/home/usman/working_dir/p1/in.jpg");
+	Log::info("inserted");
 
 	Log::info("at infinite while loop");
 

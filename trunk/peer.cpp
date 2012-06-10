@@ -12,7 +12,7 @@
 
 Peer::Peer() : 
 _ipAddress(""), _portNumber(0), _state(Peer::disconnected), _threadId(0) {
-	std::cout << "Peer constructor" << std::endl;
+	Log::info("Peer constructor");
 	// Empty
 }
 
@@ -72,24 +72,48 @@ void Peer::sendMessage(Message& msg) {
 void Peer::run() {
 	Log::info("in Peer::run()");
 	while (true) {
+		if (isCancelFlagSet())
+			return;
+			
 		if (_state != connected)
 			continue;
 
-		Log::info("trying to receive data from peer");
+		Log::info("trying to receive data size from peer");
 
 		// Retrieve the size of the data frame to follow
 		char sizeBuffer[constants::SIZE_BUFFER_SIZE];
-		_socket.receiveData(sizeBuffer, constants::SIZE_BUFFER_SIZE);
+		int rbc = _socket.receiveData(sizeBuffer, constants::SIZE_BUFFER_SIZE);
+	
+		// Exit thread if received byte count is 0, becuase that means the
+		// socket is closed
+		std::cout << "rbc = " << rbc << std::endl;
+		if (rbc == 0) {
+			_state = disconnected;
+			return;
+		}
+		
+		Log::info("received data size from peer, trying to receive data");
 		
 		// Now retreive actual data frame
 		int size = ntohl(*(int *)sizeBuffer);
+		std::cout << "size = " << size << std::endl;
 		char dataBuffer[size];
-		_socket.receiveData(dataBuffer, size);
+		rbc = _socket.receiveData(dataBuffer, size);
+		
+		std::cout << "rbc = " << rbc << std::endl;
+		if (rbc == 0) {
+			_state = disconnected;
+			return;
+		}
+		
+		Log::info("received data from peer");
 
 		// Deserialize data into Message object and put in receive queue
 		Message msg;
 		std::stringstream ss(dataBuffer);
 		ss >> msg;
+		Log::info("msg = " + ss.str());
 		_receiveQueue.push(msg);
+		Log::info("pushed message onto receive queue");
 	}
 }
