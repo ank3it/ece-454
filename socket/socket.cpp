@@ -74,7 +74,7 @@ bool Socket::connectTo(std::string hostname, int portNumber) {
 	if (connect(sockfd, 
 				(struct sockaddr *) &serverAddress, 
 				sizeof serverAddress) < 0) {
-		Log::error("Unable to connect");
+		Log::warn("Unable to connect");
 		return false;
 	}
 
@@ -96,13 +96,16 @@ void Socket::closeConnection() {
  * length: Length of the message in number of bytes
  */
 int Socket::sendData(std::string msg, int length) {
+	Log::info("in Socket::sendData()");
 	int n = 0;
 
 	int nextFrameSize = htonl(length);
+	std::cout << "nextFrameSize = " << nextFrameSize << std::endl;
 	if (send(sockfd, &nextFrameSize, sizeof(nextFrameSize), 0) < 0) {
 		Log::error("Failed to send size header");
 	}
 
+	Log::info("sending: " + msg);
 	n = send(sockfd, (char *)msg.c_str(), length, 0);
 	if (n < 0) {
 		Log::error("Failed to write to socket");
@@ -119,16 +122,24 @@ int Socket::sendData(std::string msg, int length) {
  * buffer: The buffer in which the result will be returned
  * size: The size of the data to read
  */
-void Socket::receiveData(char* buffer, int size) {
+int Socket::receiveData(char* buffer, int size) {
+	Log::info("in receiveData()");
 	int receivedByteCount = 0;
 
-	receivedByteCount = recv(sockfd, buffer, size, 0);
+	Log::info("calling recv()");
+	receivedByteCount = read(sockfd, buffer, size);
+	Log::info("after recv() call");
 
-	if (receivedByteCount < 0) {
-		return;
-	} else if (receivedByteCount < size) {
+	if (receivedByteCount > 0 && receivedByteCount < size) {
+		Log::info("calling receiveData() again");
 		receiveData(buffer + receivedByteCount, size - receivedByteCount);
+	} else if (receivedByteCount == 0) {
+		Log::warn("Couldn't receive, other socket has closed");
+	} else if (receivedByteCount < 0) {
+		Log::error("receiveData() couldn't receive any data");
 	}
+	
+	return receivedByteCount;
 }
 
 /* ---------- ServerSocket ---------- */
@@ -138,6 +149,7 @@ void Socket::receiveData(char* buffer, int size) {
  * portNumber and calls listen() to mark it as a passive socket
  */
 ServerSocket::ServerSocket(unsigned short portNumber) {
+	Log::info("in ServerSocket constructor()");
 	// Clear then populate serverAddress
 	memset(&serverAddress, 0, sizeof serverAddress);
 	serverAddress.sin_family = AF_INET;
@@ -145,11 +157,11 @@ ServerSocket::ServerSocket(unsigned short portNumber) {
 	serverAddress.sin_port = htons(portNumber);
 
 	// Bind
-	if (bind(sockfd, 
-			(struct sockaddr *) &serverAddress, 
-			sizeof serverAddress) < 0) {
+	if (bind(sockfd, (struct sockaddr *) &serverAddress, 
+		sizeof serverAddress) < 0) {
 		Log::error("Unable to bind socket");
 	}
+	Log::info("ServerSocket bind() successful");
 
 	// Listen
 	listen(sockfd, 5);
@@ -160,6 +172,7 @@ ServerSocket::ServerSocket(unsigned short portNumber) {
  * Returns the socket which can used to communicate with the client.
  */
 Socket ServerSocket::acceptConnection() {
+	Log::info("in ServerSocket::acceptConnection()");
 	socklen_t clientLength = sizeof clientAddr;
 	int newSockfd = accept(sockfd, 
 			(struct sockaddr *) &clientAddr,

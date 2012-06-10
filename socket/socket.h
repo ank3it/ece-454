@@ -25,7 +25,7 @@ class Socket {
 		bool connectTo(std::string, int);
 		void closeConnection();
 		int sendData(std::string, int);
-		void receiveData(char*, int);
+		int receiveData(char*, int);
 	
 	protected:
 		int sockfd;

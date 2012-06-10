@@ -65,7 +65,7 @@ int Peers::initialize(std::string peersFile) {
 		p->setIpAddress(ipAddress);
 		p->setPortNumber(portNumber);
 		p->setState(Peer::disconnected);
-		_peers.push_back(p);
+		addPeer(p);
 		++numPeers;
 	}
 
@@ -74,6 +74,15 @@ int Peers::initialize(std::string peersFile) {
 		return returnCodes::ERROR_NO_PEERS_FOUND;
 
 	return returnCodes::OK;
+}
+
+/*
+ * Add the given peer to the list of peers.
+ *
+ * peer: The Peer to add to the list
+ */
+void Peers::addPeer(Peer* peer) {
+	_peers.push_back(peer);
 }
 
 /*
