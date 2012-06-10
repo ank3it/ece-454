@@ -193,11 +193,13 @@ void LocalPeer::run() {
 					{
 						Log::info("received file chunk");
 						// Extract FileChunk object
-						std::stringstream ss;
-						ss << m.getMessageBody();
-						Log::info("after putting message body into stream");
+						//std::stringstream ss;
+						//ss << m.getMessageBody();
+						//Log::info("after putting message body into stream");
+						//Log::info("message body: " + m.getMessageBody());
 						FileChunk fc;
-						ss >> fc;
+						fc.deserialize(m.getMessageBody());
+						//ss >> fc;
 						
 						Log::info("deserialized file chunk");
 
@@ -228,9 +230,9 @@ void LocalPeer::run() {
 
 						if (_fileManager.getChunkFromFile(fc)) {
 							Log::info("got chunk from file");
-							std::stringstream ss2;
-							ss2 << fc;
-							Message m(Message::FILE_CHUNK, ss2.str());
+							//std::stringstream ss2;
+							//ss2 << fc;
+							Message m(Message::FILE_CHUNK, fc.serialize());
 							(*it)->sendMessage(m);
 						}
 					}

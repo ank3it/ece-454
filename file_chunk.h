@@ -21,6 +21,8 @@ class FileChunk {
 		int getTotalChunks() { return _totalChunks; }
 		int getDataSize() { return _dataSize; }
 		char* getData() { return _data; }
+		std::string serialize();
+		void deserialize(std::string);
 
 	private:
 		std::string _filename;
