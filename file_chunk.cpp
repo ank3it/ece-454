@@ -9,6 +9,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
+#include "util.h"
 
 /*
  * Default constructor, initializes all values to 0/NULL/""
@@ -16,6 +17,7 @@
 FileChunk::FileChunk() 
 : _filename(""), _chunkIndex(0), _totalChunks(0), _data(0), _dataSize(0) {
 	// Empty constructor
+	Log::info("FileChunk constructor()");
 }
 
 /*
@@ -23,8 +25,18 @@ FileChunk::FileChunk()
  */
 FileChunk::FileChunk(std::string fn, int ci, int tc, char d[], int ds) 
 : _filename(fn), _chunkIndex(ci), _totalChunks(tc), _data(d), _dataSize(ds) {
+	Log::info("FileChunk constructor(params)");
 	_data = new char[ds];
 	memcpy(_data, d, ds);
+}
+
+/*
+ * Constructor. Initializes class with given values, but leaves the data field
+ * as a null pointer.
+ */
+FileChunk::FileChunk(std::string fn, int ci, int tc, int ds) 
+: _filename(fn), _chunkIndex(ci), _totalChunks(tc), _data(0), _dataSize(ds) {
+	Log::info("FileChunk constructor(params)");
 }
 
 /*

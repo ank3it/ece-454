@@ -13,6 +13,7 @@ class FileChunk {
 	public:
 		FileChunk();
 		FileChunk(std::string, int, int, char*, int);
+		FileChunk(std::string, int, int, int);
 		~FileChunk();
 
 		std::string getFilename() { return _filename; }

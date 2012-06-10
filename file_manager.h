@@ -10,12 +10,13 @@
 
 #include <string>
 #include <map>
+#include <pthread.h>
 #include "file.h"
 #include "file_chunk.h"
 
 class FileManager {
 	public:
-		FileManager() { /* Empty */ }
+		FileManager();
 		~FileManager();
 
 		static const int CHUNK_SIZE = 65536; // remove
@@ -27,9 +28,12 @@ class FileManager {
 		int addRemoteFile(std::string, int, int);
 		void addChunkToFile(FileChunk&);
 		bool getChunkFromFile(FileChunk&);
+		void lock();
+		void unlock();
 
 	private:
 		std::map<std::string, File*> _filesTable;
+		pthread_mutex_t _mutex;
 };
 
 #endif /* _FILE_MANAGER_H_ */

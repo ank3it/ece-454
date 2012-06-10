@@ -13,7 +13,6 @@
 #include "queue/concurrent_queue.h"
 #include "message.h"
 #include <sstream>
-#include <cmath>
 
 /*
  * Constructor. Creates new ServerSocket and Server objects using the default
@@ -45,7 +44,6 @@ LocalPeer::LocalPeer(unsigned short portNum) : _portNumber(portNum) {
 LocalPeer::~LocalPeer() {
 	Log::info("LocalPeer destructor()");
 	stopThread();
-	Log::info("after waitForThread() call");
 	
 	_serverSocket->closeConnection();
 	delete _server;
@@ -95,7 +93,7 @@ int LocalPeer::join() {
 	std::map<std::string, File*>* ft = _fileManager.getFilesTable();
 	std::map<std::string, File*>::iterator it;
 
-	for (it = ft->begin(); it != ft->end(); ++it){
+	for (it = ft->begin(); it != ft->end(); it++){
 		broadcastFileNotification(it->first);
 	}
 	
@@ -141,7 +139,7 @@ void LocalPeer::broadcastFileNotification(std::string filename) {
 	std::list<Peer*>* peersList = _peers.getPeersList();
 	std::list<Peer*>::iterator it;
 
-	for (it = peersList->begin(); it != peersList->end(); ++it) {
+	for (it = peersList->begin(); it != peersList->end(); it++) {
 		if ((*it)->getState() == Peer::connected)
 			(*it)->sendMessage(m);
 	}
@@ -156,7 +154,7 @@ void LocalPeer::broadcastLeaveNotification() {
 	std::list<Peer*>* peersList = _peers.getPeersList();
 	std::list<Peer*>::iterator it;
 
-	for (it = peersList->begin(); it != peersList->end(); ++it) {
+	for (it = peersList->begin(); it != peersList->end(); it++) {
 		if ((*it)->getState() == Peer::connected)
 			(*it)->sendMessage(m);
 	}
@@ -176,13 +174,12 @@ void LocalPeer::run() {
 		std::list<Peer*>* peersList = _peers.getPeersList();
 		std::list<Peer*>::iterator it;
 
-		for (it = peersList->begin(); it != peersList->end(); ++it) {
+		for (it = peersList->begin(); it != peersList->end(); it++) {
 			ConcurrentQueue<Message>* q = (*it)->getReceiveQueue();
 			Message m;
 
 			// Check peer's receive queue
 			if (q->tryPop(m)) {
-				Log::info("TRYPOP() WORKED");
 				switch(m.getMessageType()) {
 					case Message::LEAVE_NOTIFICATION:
 						// Remove peer from list of peers
@@ -212,6 +209,8 @@ void LocalPeer::run() {
 						int chunkIndex = 0;
 						int totalChunks = 0;
 						int dataSize = 0;
+						
+						Log::info("Reading file chunk request");
 
 						ss << m.getMessageBody();
 						ss >> filename;
@@ -219,12 +218,15 @@ void LocalPeer::run() {
 						ss >> totalChunks;
 						ss >> dataSize;
 
-						FileChunk fc(filename, chunkIndex, totalChunks, 0, 
+						FileChunk fc(filename, chunkIndex, totalChunks, 
 							dataSize);
+							
+						Log::info("created file chunk object");
 
 						if (!_fileManager.getChunkFromFile(fc)) {
 							std::stringstream ss2;
 							ss2 << fc;
+							Log::info("ss2 = " + ss2.str());
 							Message m(Message::FILE_CHUNK, ss2.str());
 							(*it)->sendMessage(m);
 						}
@@ -239,11 +241,8 @@ void LocalPeer::run() {
 
 						File f;
 						ss >> f;
-						if (!_fileManager.exists(f.getFilename())) {
-							Log::info("file does not already exist, adding it to filemanager");
-							_fileManager.addRemoteFile(f.getFilename(), 
-								f.getTotalChunks(), f.getFileSize());
-						}
+						_fileManager.addRemoteFile(f.getFilename(), 
+							f.getTotalChunks(), f.getFileSize());
 					}
 						break;
 					default:
@@ -256,29 +255,36 @@ void LocalPeer::run() {
 			std::map<std::string, File*>* ft = _fileManager.getFilesTable();
 			std::map<std::string, File*>::iterator mit;
 
-			for (mit = ft->begin(); mit != ft->end(); ++mit) {
+			for (mit = ft->begin(); mit != ft->end(); mit++) {
+				_fileManager.lock();
 				File* f = mit->second;
+				_fileManager.unlock();
+				
 				if (f->getNumChunks() == f->getTotalChunks()) 
 					continue;
 
-				for (int i = 0; i < f->getTotalChunks(); ++i) {
-					if (!f->isAvailable(i))
+				for (int i = 0; i < f->getTotalChunks(); i++) {
+					// Skip chunks we already have
+					if (f->isAvailable(i))
 						continue;
 
 					// Calculate chunk size
 					int dataSize = constants::CHUNK_SIZE;
 					if (i == f->getTotalChunks() - 1) {
-						dataSize = ceil(
-							(double)f->getFileSize() 
-							/ (double)constants::CHUNK_SIZE);
+						// The remainder or chunk size if its divisable
+						dataSize = f->getFileSize() % constants::CHUNK_SIZE;
+						if (dataSize == 0) 
+							dataSize = constants::CHUNK_SIZE;
 					}
 
 					std::stringstream ss;
 					ss << f->getFilename() << " ";
 					ss << i << " ";
 					ss << f->getTotalChunks() << " ";
-					ss << f->getFileSize() << " ";
+					ss << dataSize << " ";
 
+					//Log::info("ss.str() = " + ss.str());
+					
 					Message m(Message::FILE_CHUNK_REQUEST, ss.str());
 					(*it)->sendMessage(m);
 				}
