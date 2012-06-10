@@ -62,7 +62,6 @@ bool FileManager::exists(std::string filename) {
  */
 int FileManager::addLocalFile(std::string filepath) {
 	Log::info("in FileManager::addLocalFile()");
-	Log::info("filepath = " + filepath);
 
 	char* buffer;
 	std::ifstream inFile(filepath.c_str(), 
@@ -71,7 +70,6 @@ int FileManager::addLocalFile(std::string filepath) {
 	if (!inFile.is_open())
 		return returnCodes::ERROR_FILE_NOT_FOUND;
 
-	Log::info("was able to open file");
 
 	// Copy file
 	// Read file into buffer
@@ -84,18 +82,14 @@ int FileManager::addLocalFile(std::string filepath) {
 
 	// Write file from buffer
 	std::string filename = Util::extractFilename(filepath);
-	Log::info("filename = " + filename);
 	std::string outFilename = Util::generateUniqueFilename(
 		constants::FILES_DIR, filename);
-	Log::info("outFilename = " + outFilename);
 
 	std::ofstream outFile(outFilename.c_str(), 
 		std::ios::out | std::ios::binary);
 
 	if (!outFile.is_open())
 		return returnCodes::ERROR_UNKNOWN;
-	
-	Log::info("was able to open output file");
 
 	outFile.write(buffer, size);
 	outFile.close();
@@ -109,8 +103,6 @@ int FileManager::addLocalFile(std::string filepath) {
 	_filesTable[filename] = file;
 	unlock();
 
-	Log::info("added file to files table");
-
 	return returnCodes::OK;
 }
 
@@ -120,15 +112,12 @@ int FileManager::addLocalFile(std::string filepath) {
  */
 int FileManager::addRemoteFile(std::string filepath, int numberOfChunks, int fileSize) {
 	Log::info("in FileManager::addRemoteFile()");
-	Log::info("filepath = " + filepath);
 	lock();
 	if (_filesTable.count(filepath) == 0) {
 		File* file = new File(filepath, numberOfChunks, false, fileSize);
 		file->_numChunks = 0;
 
 		_filesTable[filepath] = file;
-		
-		std::cout << "file = " << *_filesTable[filepath] << std::endl;
 	}
 	unlock();
 

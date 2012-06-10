@@ -6,7 +6,7 @@
 int main() {
 	std::cout << "test2.cpp" << std::endl;
 
-	LocalPeer lp(8082);
+	LocalPeer lp(8081);
 	Log::info("LocalPeer created");
 	lp.join();
 	Log::info("Joined network");

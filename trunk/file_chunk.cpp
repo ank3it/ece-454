@@ -17,15 +17,15 @@
 FileChunk::FileChunk() 
 : _filename(""), _chunkIndex(0), _totalChunks(0), _data(0), _dataSize(0) {
 	// Empty constructor
-	Log::info("FileChunk constructor()");
+	//Log::info("FileChunk constructor()");
 }
 
 /*
  * Constructor. Initializes class with given values. 
  */
 FileChunk::FileChunk(std::string fn, int ci, int tc, char d[], int ds) 
-: _filename(fn), _chunkIndex(ci), _totalChunks(tc), _data(d), _dataSize(ds) {
-	Log::info("FileChunk constructor(params)");
+: _filename(fn), _chunkIndex(ci), _totalChunks(tc), _dataSize(ds) {
+	//Log::info("FileChunk constructor(params)");
 	_data = new char[ds];
 	memcpy(_data, d, ds);
 }
@@ -35,8 +35,9 @@ FileChunk::FileChunk(std::string fn, int ci, int tc, char d[], int ds)
  * as a null pointer.
  */
 FileChunk::FileChunk(std::string fn, int ci, int tc, int ds) 
-: _filename(fn), _chunkIndex(ci), _totalChunks(tc), _data(0), _dataSize(ds) {
-	Log::info("FileChunk constructor(params)");
+: _filename(fn), _chunkIndex(ci), _totalChunks(tc), _dataSize(ds) {
+	//Log::info("FileChunk constructor(params)");
+	_data = new char[ds];
 }
 
 /*
@@ -74,6 +75,7 @@ std::ostream& operator<<(std::ostream& os, FileChunk const& fileChunk) {
  * fileChunk: The FileChunk object into which the data will be deserialized
  */
 std::istream& operator>>(std::istream& is, FileChunk& fileChunk) {
+	Log::info("FileChunk deserialization");
 	std::string tmpStr;
 
 	is >> tmpStr;
@@ -90,12 +92,16 @@ std::istream& operator>>(std::istream& is, FileChunk& fileChunk) {
 			} else if (tmpStr.compare("_DATASIZE_") == 0) {
 				is >> fileChunk._dataSize;
 				fileChunk._data = new char[fileChunk._dataSize];
+				std::cout << "dataSize = " <<  fileChunk._dataSize << std::endl;
 			} else if (tmpStr.compare("_START_DATA_") == 0) {
+				int pos = is.tellg();
 				// Get and discard the leading space
 				is.ignore();
 
 				// Get the actual data
 				is.read(fileChunk._data, fileChunk._dataSize);
+				while (tmpStr.compare("_END_DATA_") != 0)
+					is >> tmpStr;
 			}
 	
 		} while (tmpStr.compare("_END_FILECHUNK_") != 0);
@@ -103,6 +109,8 @@ std::istream& operator>>(std::istream& is, FileChunk& fileChunk) {
 		// Reset the stream get pointer position
 		is.seekg(-tmpStr.length(), std::ios_base::cur);
 	}
+	
+	Log::info("about to return from FilChunk deserialization");
 
 	return is;
 }

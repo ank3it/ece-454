@@ -9,6 +9,7 @@
 #include "file.h"
 #include "constants.h"
 #include "util.h"
+#include <iostream> // remove
 
 File::File() : 
 _filename(""), _numChunks(0), _totalChunks(0), _isAvailable(0), _fileSize(0) {
@@ -54,20 +55,24 @@ File::~File() {
  */
 bool File::readChunk(FileChunk& fc) {
 	Log::info("File::readChunk()");
+	Log::info("_filename = " + _filename);
 	if (fc.getChunkIndex() >= _totalChunks)
 		return false;
 
 	if (!_isAvailable[fc.getChunkIndex()])
 		return false;
+		
+	Log::info("still here");
+	
+	std::string filepath = constants::FILES_DIR + "/" + _filename;
 
-	std::fstream inFile(_filename.c_str(), 
-		std::ios::out | std::ios::binary | std::ios::app);
+	std::ifstream inFile(filepath.c_str(), std::ios::out|std::ios::binary);
 
 	if (!inFile.is_open())
 		return false;
 
 	int offset = fc.getChunkIndex() * constants::CHUNK_SIZE;
-	inFile.seekg(offset);
+	inFile.seekg(offset, std::ios::beg);
 
 	inFile.read(fc.getData(), fc.getDataSize());
 	inFile.close();
@@ -83,16 +88,31 @@ bool File::readChunk(FileChunk& fc) {
  */
 bool File::writeChunk(FileChunk& fc) {
 	Log::info("File::writeChunk()");
+	
+	static bool isWrittenToDisk = false;
+	static int callCounter = 0;
+	
 	if (fc.getChunkIndex() >= _totalChunks)
 		return false;
+	
+	std::ofstream outFile;
+	std::string filepath = constants::FILES_DIR + "/" + _filename;
+	
+	// Create a sparse file for writting the chunks to	
+	if (!isWrittenToDisk) {
+		outFile.open(filepath.c_str(), std::ios::binary);
+		outFile.seekp(_fileSize - 1);
+		outFile.write(" ", 1);
+		outFile.close();
+		isWrittenToDisk = true;
+	}	
 
-	std::fstream outFile(_filename.c_str(), 
-		std::ios::in | std::ios::binary | std::ios::app);
+	outFile.open(filepath.c_str(), std::ios::in|std::ios::out|std::ios::binary);
 
 	if (!outFile.is_open())
 		return false;
 
-	int offset = fc.getChunkIndex() * constants::CHUNK_SIZE;
+	long offset = fc.getChunkIndex() * constants::CHUNK_SIZE;
 	outFile.seekp(offset);
 
 	outFile.write(fc.getData(), fc.getDataSize());
@@ -101,6 +121,10 @@ bool File::writeChunk(FileChunk& fc) {
 	// Mark chunk as available
 	_isAvailable[fc.getChunkIndex()] = true;
 	_numChunks++;
+	
+	Log::info("writeChunk() completed");
+	callCounter++;
+	std::cout << "callCounter = " << callCounter << std::endl;
 
 	return true;
 }

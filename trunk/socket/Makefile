@@ -6,8 +6,8 @@ CFLAGS=-Wall -g
 LD=g++
 LDFLAGS=-pthread
 
-S_OBJS=socket.o server.o
-C_OBJS=socket.o client.o
+S_OBJS=socket.o server.o util.o
+C_OBJS=socket.o client.o util.o
 
 all: server.out client.out
 
@@ -22,6 +22,9 @@ client.out: $(C_OBJS)
 server.o: socket.h
 client.o: socket.h
 socket.o: socket.h
+util.o:
+	cd ../
+	$(CXX) $(CFLAGS) -c -o util.o ../util.cpp
 
 .PHONY: clean
 clean:

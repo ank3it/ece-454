@@ -36,4 +36,6 @@ thread.o:
 clean:
 	rm -f *.o *.out *.gch
 	rm -f ./a/*.out
+	rm -f ./a/files/*
 	rm -f ./b/*.out
+	rm -f ./b/files/*
