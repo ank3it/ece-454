@@ -8,6 +8,7 @@
 #include <fstream>
 #include "file.h"
 #include "constants.h"
+#include "util.h"
 
 File::File() : 
 _filename(""), _numChunks(0), _totalChunks(0), _isAvailable(0), _fileSize(0) {
@@ -52,6 +53,7 @@ File::~File() {
  * The read data will also be returned in this object.
  */
 bool File::readChunk(FileChunk& fc) {
+	Log::info("File::readChunk()");
 	if (fc.getChunkIndex() >= _totalChunks)
 		return false;
 
@@ -80,6 +82,7 @@ bool File::readChunk(FileChunk& fc) {
  * chunk: A FileChunk object containing the data to be written
  */
 bool File::writeChunk(FileChunk& fc) {
+	Log::info("File::writeChunk()");
 	if (fc.getChunkIndex() >= _totalChunks)
 		return false;
 

@@ -85,6 +85,7 @@ bool Socket::connectTo(std::string hostname, int portNumber) {
  * Close the socket
  */
 void Socket::closeConnection() {
+	Log::info("Socket::closeConnection()");
 	close(sockfd);
 }
 
@@ -96,16 +97,14 @@ void Socket::closeConnection() {
  * length: Length of the message in number of bytes
  */
 int Socket::sendData(std::string msg, int length) {
-	Log::info("in Socket::sendData()");
+	//Log::info("in Socket::sendData()");
 	int n = 0;
 
 	int nextFrameSize = htonl(length);
-	std::cout << "nextFrameSize = " << nextFrameSize << std::endl;
 	if (send(sockfd, &nextFrameSize, sizeof(nextFrameSize), 0) < 0) {
 		Log::error("Failed to send size header");
 	}
 
-	Log::info("sending: " + msg);
 	n = send(sockfd, (char *)msg.c_str(), length, 0);
 	if (n < 0) {
 		Log::error("Failed to write to socket");
@@ -123,12 +122,10 @@ int Socket::sendData(std::string msg, int length) {
  * size: The size of the data to read
  */
 int Socket::receiveData(char* buffer, int size) {
-	Log::info("in receiveData()");
+	//Log::info("in receiveData()");
 	int receivedByteCount = 0;
 
-	Log::info("calling recv()");
 	receivedByteCount = read(sockfd, buffer, size);
-	Log::info("after recv() call");
 
 	if (receivedByteCount > 0 && receivedByteCount < size) {
 		Log::info("calling receiveData() again");

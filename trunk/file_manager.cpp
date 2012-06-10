@@ -14,6 +14,10 @@
 #include <iostream> // remove
 #include <sstream> // remove
 
+FileManager::FileManager() {
+	pthread_mutex_init(&_mutex, NULL);
+}
+
 /*
  * Destructor. Iterates through the files tables and delete all the dynamically 
  * allocated File objects.
@@ -33,7 +37,7 @@ FileManager::~FileManager() {
  * filename: The requested File object.
  */
 File* FileManager::getFile(std::string filename) {
-	Log::info("in getFile()");
+	Log::info("in FileManager::getFile()");
 	Log::info("getFile() filename = " + filename);
 	if (exists(filename))
 		return _filesTable[filename];
@@ -57,7 +61,7 @@ bool FileManager::exists(std::string filename) {
  * filepath: The path to the file to be added
  */
 int FileManager::addLocalFile(std::string filepath) {
-	Log::info("in addLocalFile()");
+	Log::info("in FileManager::addLocalFile()");
 	Log::info("filepath = " + filepath);
 
 	char* buffer;
@@ -101,7 +105,9 @@ int FileManager::addLocalFile(std::string filepath) {
 	// Create File object and adds to files table
 	int numberOfChunks = ceil((double)size / (double)constants::CHUNK_SIZE);
 	File* file = new File(filename, numberOfChunks, true, size);
+	lock();
 	_filesTable[filename] = file;
+	unlock();
 
 	Log::info("added file to files table");
 
@@ -113,12 +119,18 @@ int FileManager::addLocalFile(std::string filepath) {
  * does not already exist.
  */
 int FileManager::addRemoteFile(std::string filepath, int numberOfChunks, int fileSize) {
+	Log::info("in FileManager::addRemoteFile()");
+	Log::info("filepath = " + filepath);
+	lock();
 	if (_filesTable.count(filepath) == 0) {
 		File* file = new File(filepath, numberOfChunks, false, fileSize);
 		file->_numChunks = 0;
 
 		_filesTable[filepath] = file;
+		
+		std::cout << "file = " << *_filesTable[filepath] << std::endl;
 	}
+	unlock();
 
 	return returnCodes::OK;
 }
@@ -129,9 +141,13 @@ int FileManager::addRemoteFile(std::string filepath, int numberOfChunks, int fil
  * fc: A filled FileChunk object
  */
 void FileManager::addChunkToFile(FileChunk& fc) {
+	Log::info("FileManager::addChunkToFile()");
+	lock();
 	if (_filesTable.count(fc.getFilename()) > 0) {
-		_filesTable[fc.getFilename()]->writeChunk(fc);
+		if (!_filesTable[fc.getFilename()]->isAvailable(fc.getChunkIndex()))
+			_filesTable[fc.getFilename()]->writeChunk(fc);
 	}
+	unlock();
 }
 
 /*
@@ -140,9 +156,28 @@ void FileManager::addChunkToFile(FileChunk& fc) {
  * fc: A partly filled FileChunk object
  */
 bool FileManager::getChunkFromFile(FileChunk& fc) {
-	if (_filesTable.count(fc.getFilename()) != 0)
+	Log::info("FileManager::getChunkFromFile()");
+	lock();
+	if (_filesTable.count(fc.getFilename()) == 0) {
+		unlock();
 		return false;
+	}
 	
 	_filesTable[fc.getFilename()]->readChunk(fc);
+	unlock();
 	return true;
+}
+
+/*
+ * Lock the class to synchronize access across threads.
+ */
+void FileManager::lock() {
+	pthread_mutex_lock(&_mutex);
+}
+
+/*
+ * Unlock the class.
+ */
+void FileManager::unlock() {
+	pthread_mutex_unlock(&_mutex);
 }

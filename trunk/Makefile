@@ -18,6 +18,7 @@ b.out: test2.o $(OBJS)
 	$(CXX) $(CFLAGS) $(LDFLAGS) -o ./b/b.out $(OBJS) test2.o
 
 test.o:
+test2.o:
 local_peer.o:
 peer.o:
 peers.o:
