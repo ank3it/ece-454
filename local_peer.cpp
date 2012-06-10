@@ -166,6 +166,7 @@ void LocalPeer::broadcastLeaveNotification() {
  * sends out file chunk requests to other peers.
  */
 void LocalPeer::run() {
+	static int flag = 0;
 	Log::info("in LocalPeer::run()");
 	while (true) {
 		if (isCancelFlagSet())
@@ -194,11 +195,15 @@ void LocalPeer::run() {
 						// Extract FileChunk object
 						std::stringstream ss;
 						ss << m.getMessageBody();
+						Log::info("after putting message body into stream");
 						FileChunk fc;
 						ss >> fc;
+						
+						Log::info("deserialized file chunk");
 
 						// Write FileChunk to file
 						_fileManager.addChunkToFile(fc);
+						Log::info("added chunk to file");
 					}
 						break;
 					case Message::FILE_CHUNK_REQUEST:
@@ -209,8 +214,6 @@ void LocalPeer::run() {
 						int chunkIndex = 0;
 						int totalChunks = 0;
 						int dataSize = 0;
-						
-						Log::info("Reading file chunk request");
 
 						ss << m.getMessageBody();
 						ss >> filename;
@@ -221,12 +224,12 @@ void LocalPeer::run() {
 						FileChunk fc(filename, chunkIndex, totalChunks, 
 							dataSize);
 							
-						Log::info("created file chunk object");
+						//Log::info("created file chunk object");
 
-						if (!_fileManager.getChunkFromFile(fc)) {
+						if (_fileManager.getChunkFromFile(fc)) {
+							Log::info("got chunk from file");
 							std::stringstream ss2;
 							ss2 << fc;
-							Log::info("ss2 = " + ss2.str());
 							Message m(Message::FILE_CHUNK, ss2.str());
 							(*it)->sendMessage(m);
 						}
@@ -237,7 +240,6 @@ void LocalPeer::run() {
 						Log::info("received file notification");
 						std::stringstream ss;
 						ss << m.getMessageBody();
-						Log::info("messagebody = " + ss.str());
 
 						File f;
 						ss >> f;
@@ -250,46 +252,49 @@ void LocalPeer::run() {
 						break;
 				}
 			}
-
+			
+			if (flag == 0) { // remove
 			// Send file chunk request
-			std::map<std::string, File*>* ft = _fileManager.getFilesTable();
-			std::map<std::string, File*>::iterator mit;
+				std::map<std::string, File*>* ft = _fileManager.getFilesTable();
+				std::map<std::string, File*>::iterator mit;
 
-			for (mit = ft->begin(); mit != ft->end(); mit++) {
-				_fileManager.lock();
-				File* f = mit->second;
-				_fileManager.unlock();
+				for (mit = ft->begin(); mit != ft->end(); mit++) {
+					_fileManager.lock();
+					File* f = mit->second;
+					_fileManager.unlock();
 				
-				if (f->getNumChunks() == f->getTotalChunks()) 
-					continue;
-
-				for (int i = 0; i < f->getTotalChunks(); i++) {
-					// Skip chunks we already have
-					if (f->isAvailable(i))
+					if (f->getNumChunks() == f->getTotalChunks()) 
 						continue;
 
-					// Calculate chunk size
-					int dataSize = constants::CHUNK_SIZE;
-					if (i == f->getTotalChunks() - 1) {
-						// The remainder or chunk size if its divisable
-						dataSize = f->getFileSize() % constants::CHUNK_SIZE;
-						if (dataSize == 0) 
-							dataSize = constants::CHUNK_SIZE;
+					for (int i = 0; i < f->getTotalChunks(); i++) {
+						// Skip chunks we already have
+						if (f->isAvailable(i))
+							continue;
+
+						// Calculate chunk size
+						int dataSize = constants::CHUNK_SIZE;
+						if (i == f->getTotalChunks() - 1) {
+							// The remainder or chunk size if its divisable
+							dataSize = f->getFileSize() % constants::CHUNK_SIZE;
+							if (dataSize == 0) 
+								dataSize = constants::CHUNK_SIZE;
+						}
+
+						std::stringstream ss;
+						ss << f->getFilename() << " ";
+						ss << i << " ";
+						ss << f->getTotalChunks() << " ";
+						ss << dataSize << " ";
+					
+						Message m(Message::FILE_CHUNK_REQUEST, ss.str());
+						(*it)->sendMessage(m);
+						flag = 1;	// remove
 					}
 
-					std::stringstream ss;
-					ss << f->getFilename() << " ";
-					ss << i << " ";
-					ss << f->getTotalChunks() << " ";
-					ss << dataSize << " ";
-
-					//Log::info("ss.str() = " + ss.str());
-					
-					Message m(Message::FILE_CHUNK_REQUEST, ss.str());
-					(*it)->sendMessage(m);
 				}
-
 			}
+				
+				
 		}
 	}
 }

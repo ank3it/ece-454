@@ -122,19 +122,23 @@ int Socket::sendData(std::string msg, int length) {
  * size: The size of the data to read
  */
 int Socket::receiveData(char* buffer, int size) {
-	//Log::info("in receiveData()");
+	Log::info("in receiveData()");
 	int receivedByteCount = 0;
 
 	receivedByteCount = read(sockfd, buffer, size);
-
-	if (receivedByteCount > 0 && receivedByteCount < size) {
-		Log::info("calling receiveData() again");
-		receiveData(buffer + receivedByteCount, size - receivedByteCount);
-	} else if (receivedByteCount == 0) {
+	
+	while (receivedByteCount > 0 && receivedByteCount < size) {
+		receivedByteCount += 
+			read(sockfd, &buffer[receivedByteCount], size - receivedByteCount);
+			//receiveData(&buffer[receivedByteCount], size - receivedByteCount);
+	} 
+	
+	if (receivedByteCount == 0) {
 		Log::warn("Couldn't receive, other socket has closed");
 	} else if (receivedByteCount < 0) {
 		Log::error("receiveData() couldn't receive any data");
 	}
+	
 	
 	return receivedByteCount;
 }

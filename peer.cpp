@@ -104,8 +104,11 @@ void Peer::run() {
 		}
 
 		// Deserialize data into Message object and put in receive queue
+		std::string bufferStr(dataBuffer, size);
+			
 		Message msg;
-		std::stringstream ss(dataBuffer);
+		std::stringstream ss;
+		ss << bufferStr;
 		ss >> msg;
 		_receiveQueue.push(msg);
 	}
