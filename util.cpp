@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <sstream>
 #include "util.h"
+#include "constants.h"
 
 /*
  * Static function that extracts the filename from a given filepath. (i.e. given
@@ -49,19 +50,22 @@ std::string Util::generateUniqueFilename(std::string folder, std::string filenam
  * Prints the given message
  */
 void Log::info(std::string msg) {
-	std::cout << "INFO: "  << msg << std::endl;
+	if (constants::LOGGING_ENABLED)
+		std::cout << "INFO: "  << msg << std::endl;
 }
 
 /*
  * Prints the given message
  */
 void Log::warn(std::string msg) {
-	std::cout << "WARN: "  << msg << std::endl;
+	if (constants::LOGGING_ENABLED)
+		std::cout << "WARN: "  << msg << std::endl;
 }
 
 /*
  * Prints the given message
  */
 void Log::error(std::string msg) {
-	std::cout << "ERROR: "  << msg << std::endl;
+	if (constants::LOGGING_ENABLED)
+		std::cout << "ERROR: "  << msg << std::endl;
 }

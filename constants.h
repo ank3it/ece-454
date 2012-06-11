@@ -17,6 +17,7 @@ namespace constants {
 	const std::string FILES_DIR = "files";
 	const unsigned short DEFAULT_PORT_NUMBER = 8080;
 	const int SIZE_BUFFER_SIZE = 4;
+	const bool LOGGING_ENABLED = true;
 }
 
 #endif /* _CONSTANTS_H_ */
