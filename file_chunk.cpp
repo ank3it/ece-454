@@ -56,6 +56,8 @@ std::string FileChunk::serialize() {
 	ss << _chunkIndex << " ";
 	ss << _totalChunks << " ";
 	ss << _dataSize << " ";
+	std::cout << "Chunk Index " << _chunkIndex << std::endl;
+	std::cout << "_dataSize " << _dataSize << std::endl;
 
 	ss_str += ss.str();
 	
@@ -97,7 +99,7 @@ void FileChunk::deserialize(std::string str) {
 	std::cout << "last space: " << pos1 << std::endl;
 	
 	for (int i = 0; i < _dataSize; i++)
-		_data[i] = str[pos1 + i];
+		_data[i] = str[pos1 + i+1];
 }
 
 /*

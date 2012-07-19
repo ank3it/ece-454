@@ -80,7 +80,7 @@ void Peer::run() {
 			continue;
 
 		// Retrieve the size of the data frame to follow
-		char sizeBuffer[constants::SIZE_BUFFER_SIZE];
+		char *sizeBuffer = new char[constants::SIZE_BUFFER_SIZE];
 		int rbc = _socket.receiveData(sizeBuffer, constants::SIZE_BUFFER_SIZE);
 	
 		// Exit thread if received byte count is 0, becuase that means the
@@ -94,7 +94,7 @@ void Peer::run() {
 		// Now retreive actual data frame
 		int size = ntohl(*(int *)sizeBuffer);
 		//std::cout << "size = " << size << std::endl;
-		char dataBuffer[size];
+		char *dataBuffer = new char[size];
 		rbc = _socket.receiveData(dataBuffer, size);
 		
 		//std::cout << "rbc = " << rbc << std::endl;
@@ -111,5 +111,7 @@ void Peer::run() {
 		ss << bufferStr;
 		ss >> msg;
 		_receiveQueue.push(msg);
+		delete[] dataBuffer;
+		delete[] sizeBuffer;
 	}
 }
