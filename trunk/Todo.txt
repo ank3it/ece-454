@@ -1,0 +1,24 @@
+[x] Start new thread to communicate with remote node on connect
+[x] Ability to connect to other nodes
+	[x] Test
+[x] Add file data member to Message class
+[x] Able receive messages from remote nodes
+	[ ] Test
+[x] Add nodes list file which will contain a list of all nodes
+[x] Ability to broadcast via flooding
+	[ ] Test
+[x] Re-think user tag versioning data structure
+[x] Ability to download file from remote node
+	[ ] Test
+[ ] Display logical view of files
+[ ] Synchronization
+[x] Ability to tag files
+	[x] Test
+[ ] Add and remove files
+[x] Certain file attributes should not be transmitted to other nodes (e.g. keepLocalCopy). Might be able to ignore this.
+[ ] Only delete file if connected to the network?
+[ ] Download-on-demand
+[x] Ability to serialize > send > receive > deserialize messages between nodes
+	[ ] Test
+[ ] Proper exception handling
+[ ] Replace open operation with read and write?
