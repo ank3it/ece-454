@@ -32,9 +32,22 @@ public class PeerBookFile {
 		this.fileMetadata = fileMetadata;
 	}
 	
+	public InputStream getInputStream() {
+		// TODO Modify to work with custom input stream
+		return null;
+	}
+	
+	public OutputStream getOutputStream() {
+		// TODO Modify to work with custom output stream
+		return null;
+	}
+	
 	/**
-	 * Returns the binary data of the file as an array if the file is available locally. 
-	 * @return The binary data of the file as a byte array if it is available locally.
+	 * Returns the binary data of the file as an array if the file is available
+	 * locally.
+	 * 
+	 * @return The binary data of the file as a byte array if it is available
+	 *         locally.
 	 */
 	public byte[] read() {
 		if (!fileMetadata.isAvailableLocally())
@@ -62,7 +75,7 @@ public class PeerBookFile {
 					input.close();
 			}
 		} catch (FileNotFoundException e) {
-			log.severe(e.toString());
+			e.printStackTrace();
 		} catch (IOException e) {
 			log.severe(e.toString());
 		}
@@ -70,7 +83,16 @@ public class PeerBookFile {
 		return result;
 	}
 	
+	/**
+	 * Writes the given byte array to the file.
+	 * 
+	 * @param data
+	 *            The data to be written to file in the form of a byte array.
+	 */
 	public void write(byte[] data) {
+		if (fileMetadata.isReadOnly())
+			return;
+		
 		try {
 			OutputStream output = null;
 			
@@ -88,14 +110,15 @@ public class PeerBookFile {
 	}
 	
 	/**
-	 * Delete the physical file from the system. 
+	 * Delete the physical file from the system.
+	 * 
 	 * @return True if the file was deleted.
 	 */
 	public boolean delete() {
 		// Update file metadata
 		fileMetadata.setAvailableLocally(false);
-		int newInternalVersion = fileMetadata.getInternalVersion() + 1;
-		fileMetadata.setInternalVersion(newInternalVersion);
+		fileMetadata.setInternalVersion(fileMetadata.getInternalVersion() + 1);
+		fileMetadata.setDeleted(true);
 		
 		File file = new File(fileMetadata.getFilepath());
 		return file.delete();
@@ -103,7 +126,9 @@ public class PeerBookFile {
 	
 	/**
 	 * Generate a checksum of the file based on the file contents.
-	 * @param algorithm The hashing algorithm to use. (MD5, SHA-1, SHA-256, ...)
+	 * 
+	 * @param algorithm
+	 *            The hashing algorithm to use. (MD5, SHA-1, SHA-256, ...)
 	 * @throws NoSuchAlgorithmException
 	 */
 	public byte[] generateChecksum(String algorithm) throws NoSuchAlgorithmException {
@@ -114,7 +139,9 @@ public class PeerBookFile {
 	
 	/**
 	 * Updates the file's checksum.
-	 * @param algorithm The hashing algorithm to use for checksum generation.
+	 * 
+	 * @param algorithm
+	 *            The hashing algorithm to use for checksum generation.
 	 * @throws NoSuchAlgorithmException
 	 */
 	public void updateChecksum(String algorithm) throws NoSuchAlgorithmException {
@@ -122,23 +149,25 @@ public class PeerBookFile {
 	}
 	
 	/**
-	 * Creates a new user tagged version of the file. This involves creating a 
-	 * hidden read-only copy of the file and updating and storing the user tag 
+	 * Creates a new user tagged version of the file. This involves creating a
+	 * hidden read-only copy of the file and updating and storing the user tag
 	 * data.
-	 * @throws IOException 
+	 * 
+	 * @throws IOException
 	 */
 	public void tag() throws IOException {
 		int newTagVersion = fileMetadata.getCurrentUserTag() + 1;
+		String tagFilepath = Util.generateTagFilepath(fileMetadata.getFilepath(), newTagVersion);
 		
 		// Create a copy of the file being tagged
 		Path source = FileSystems.getDefault().getPath(fileMetadata.getDirectory(), fileMetadata.getFilename());
-		Path destination = FileSystems.getDefault().getPath(generateTagFilepath(newTagVersion), "");
+		Path destination = FileSystems.getDefault().getPath(tagFilepath, "");
 		Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
-		String taggedFilepath = generateTagFilepath(newTagVersion);
 		
 		// Populate the relevant user tag information
 		UserTag tag = new UserTag(
-				taggedFilepath,
+				"." + fileMetadata.getFilename() + "." + newTagVersion,
+				tagFilepath,
 				newTagVersion, 
 				System.currentTimeMillis());
 		
@@ -146,9 +175,10 @@ public class PeerBookFile {
 		
 		// Populate metadata for the newly tagged file
 		FileMetadata tagMetadata = new FileMetadata(
-				Util.extractFilename(taggedFilepath), 
-				Util.extractDirectory(taggedFilepath),
+				tag.getFilename(), 
+				Util.extractDirectory(tagFilepath),
 				true, true, true, true, 0, 0);
+		tagMetadata.setVersionedFile(true);
 		PeerBookFile file = new PeerBookFile(tagMetadata);
 		
 		try {
@@ -159,21 +189,9 @@ public class PeerBookFile {
 		
 		// Add versioned file to the table of managed files
 		FileManager.getInstance().addFile(file);
-	}
-
-	/**
-	 * Generates a filepath for the tagged file using current filepath and the new tag version number.
-	 * @param newTagVersion The version number of the new tag.
-	 * @return
-	 */
-	private String generateTagFilepath(int newTagVersion) {
-		String filename = fileMetadata.getFilepath();
-		filename = filename.replace(Util.FILE_SEPERATOR, "_");
-		filename = filename.replace(":", "_");
-		filename = Util.VERSION_DIRECTORY + Util.FILE_SEPERATOR + filename + "." + newTagVersion;
 		
-		log.info("Generated filename: " + filename);
-		return filename;
+		// Increment internal version number
+		fileMetadata.setInternalVersion(fileMetadata.getInternalVersion() + 1);
 	}
 
 	// Getters / setters

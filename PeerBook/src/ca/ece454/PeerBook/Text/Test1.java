@@ -34,9 +34,9 @@ public class Test1 {
 		// Create and initialize file object
 		PeerBookFile file = new PeerBookFile("test.jpg", ".", true, true, true, false);
 		file.tag();
-		file.updateChecksum("MD5");
+		file.updateChecksum(Util.CHECKSUM_ALGORITHM);
 //		FileSystemFile file2 = new FileSystemFile("rubric.txt", ".", true, true, true);
-//		file2.updateChecksum("MD5");
+//		file2.updateChecksum(Util.CHECKSUM_ALGORITHM);
 		
 		Message msg1 = new Message(MessageType.DOWNLOAD_REQUEST, false);
 		msg1.addFileMetadata(file.getFileMetadata());

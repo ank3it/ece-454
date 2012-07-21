@@ -5,20 +5,30 @@
 [x] Able receive messages from remote nodes
 	[ ] Test
 [x] Add nodes list file which will contain a list of all nodes
-[x] Ability to broadcast via flooding
+[x] Broadcast via flooding
 	[ ] Test
 [x] Re-think user tag versioning data structure
 [x] Ability to download file from remote node
 	[ ] Test
 [ ] Display logical view of files
 [ ] Synchronization
+	 [x] File changes and new files
+	 [x] Deleted files
+	 [x] File versions? Should be handled in serialization of file metadata
+	 [ ] Test
 [x] Ability to tag files
 	[x] Test
 [ ] Add and remove files
 [x] Certain file attributes should not be transmitted to other nodes (e.g. keepLocalCopy). Might be able to ignore this.
-[ ] Only delete file if connected to the network?
+[ ] Only delete file if connected to the network? Re-think file deletion.
 [ ] Download-on-demand
 [x] Ability to serialize > send > receive > deserialize messages between nodes
 	[ ] Test
 [ ] Proper exception handling
 [ ] Replace open operation with read and write?
+[ ] Make sure internal version number gets incremented in all the right places
+[ ] Implement ability to read and write to files
+[ ] Custom clone implementations required?
+	[ ] Test!!
+[x] Deal with same internal versions but different file contents
+[ ] Use isResourceConstrained flag to determine isKeepLocal

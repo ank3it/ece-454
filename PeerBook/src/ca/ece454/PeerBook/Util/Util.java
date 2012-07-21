@@ -30,7 +30,7 @@ public class Util {
 	public static String extractFilename(String filepath) {
 		int position = filepath.lastIndexOf(FILE_SEPERATOR);
 		
-		position = position < 0 ? 0 : position++;
+		position = position < 0 ? 0 : ++position;
 		return filepath.substring(position);
 	}
 	
@@ -43,6 +43,27 @@ public class Util {
 	public static String extractDirectory(String filepath) {
 		int position = filepath.lastIndexOf(FILE_SEPERATOR);
 		
-		return (position < 0) ? "" : filepath.substring(0, position);		
+		return (position < 1) ? "." : filepath.substring(0, position);		
+	}
+	
+	/**
+	 * Generates a filepath for the tagged file using given filepath and the new tag version.
+	 * @param newTagVersion The version number of the new tag.
+	 * @return A properly formatted file path.
+	 */
+	public static String generateTagFilepath(String initialFilepath, int newTagVersion) {
+		String filename = extractFilename(initialFilepath);
+		String directory = extractDirectory(initialFilepath);
+		directory = directory.replace(FILE_SEPERATOR, "_");
+		directory = directory.replace(":", "_");
+		
+		return VERSION_DIRECTORY + FILE_SEPERATOR + directory + filename + "." + newTagVersion;
+	}
+	
+	public static String formatFilepath(String filepath) {
+		String filename = extractFilename(filepath);
+		String directory = extractDirectory(filepath);
+		
+		return directory + FILE_SEPERATOR + filename;
 	}
 }
