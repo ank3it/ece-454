@@ -1,4 +1,4 @@
-package ca.ece454.PeerBook.Text;
+package ca.ece454.PeerBook.Test;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;

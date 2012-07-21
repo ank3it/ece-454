@@ -4,7 +4,7 @@ import java.io.File;
 
 public class Util {
 	public static final String FILE_SEPERATOR = File.separator;
-	public static final String VERSION_DIRECTORY = "versioned_files";
+	public static final String VERSION_DIRECTORY = "files\\versioned_files";
 	public static final String CHECKSUM_ALGORITHM = "MD5";
 	
 	/**
@@ -57,7 +57,7 @@ public class Util {
 		directory = directory.replace(FILE_SEPERATOR, "_");
 		directory = directory.replace(":", "_");
 		
-		return VERSION_DIRECTORY + FILE_SEPERATOR + directory + filename + "." + newTagVersion;
+		return VERSION_DIRECTORY + FILE_SEPERATOR + directory + "_" + filename + "." + newTagVersion;
 	}
 	
 //	public static String formatFilepath(String filepath) {
