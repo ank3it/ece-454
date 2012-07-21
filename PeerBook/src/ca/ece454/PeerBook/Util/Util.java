@@ -60,10 +60,10 @@ public class Util {
 		return VERSION_DIRECTORY + FILE_SEPERATOR + directory + filename + "." + newTagVersion;
 	}
 	
-	public static String formatFilepath(String filepath) {
-		String filename = extractFilename(filepath);
-		String directory = extractDirectory(filepath);
-		
-		return directory + FILE_SEPERATOR + filename;
-	}
+//	public static String formatFilepath(String filepath) {
+//		String filename = extractFilename(filepath);
+//		String directory = extractDirectory(filepath);
+//		
+//		return directory + FILE_SEPERATOR + filename;
+//	}
 }
