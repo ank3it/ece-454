@@ -2,10 +2,11 @@ package ca.ece454.PeerBook;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 
 import ca.ece454.PeerBook.Util.Util;
 
-public class FileMetadata implements Serializable {
+public class FileMetadata implements Serializable, Cloneable {
 	private static final long serialVersionUID = -205428958059968668L;
 
 	private String filename;
@@ -14,6 +15,8 @@ public class FileMetadata implements Serializable {
 	private boolean keepLocalCopy;
 	private boolean isValid;
 	private boolean isReadOnly;
+	private boolean isDeleted;
+	private boolean isVersionedFile;
 	private long lastModified;
 	private int internalVersion;
 	private byte[] checksum;
@@ -28,9 +31,21 @@ public class FileMetadata implements Serializable {
 		this.keepLocalCopy = keepLocalCopy;
 		this.isValid = isValid;
 		this.isReadOnly = isReadOnly;
+		this.isDeleted = false;
+		this.isVersionedFile = false;
 		this.lastModified = lastModified;
 		this.internalVersion = internalVersion;
+		this.checksum = null;
 		this.userTaggedVersions = new ArrayList<UserTag>();
+	}
+	
+	@Override
+	public Object clone() {
+		try {
+			return super.clone();
+		} catch (CloneNotSupportedException e) {
+			return null;
+		}
 	}
 
 //	public FileMetadata(String filename, String directory,
@@ -114,6 +129,10 @@ public class FileMetadata implements Serializable {
 	public int getCurrentUserTag() {
 		return userTaggedVersions.size();
 	}
+	
+	public List<UserTag> getUserTaggedVersions() {
+		return userTaggedVersions;
+	}
 
 	public byte[] getChecksum() {
 		return checksum;
@@ -125,5 +144,21 @@ public class FileMetadata implements Serializable {
 
 	public String getFilepath() {
 		return directory + Util.FILE_SEPERATOR + filename;
+	}
+
+	public boolean isDeleted() {
+		return isDeleted;
+	}
+
+	public void setDeleted(boolean isDeleted) {
+		this.isDeleted = isDeleted;
+	}
+
+	public boolean isVersionedFile() {
+		return isVersionedFile;
+	}
+
+	public void setVersionedFile(boolean isVersionedFile) {
+		this.isVersionedFile = isVersionedFile;
 	}
 }

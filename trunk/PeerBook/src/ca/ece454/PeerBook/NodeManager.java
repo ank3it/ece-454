@@ -33,6 +33,16 @@ public class NodeManager {
 			instance = new NodeManager();
 		return instance;
 	}
+	
+	/**
+	 * Returns true if the node manager has at least one node (i.e. It is
+	 * connected to at least one node).
+	 * 
+	 * @return True if it is connected.
+	 */
+	public boolean isConnected() {
+		return nodesTable.size() > 0;
+	}
 
 	/**
 	 * Attempt to connect to each node in the given file which contains the ip
@@ -91,7 +101,6 @@ public class NodeManager {
 	 * @throws IOException 
 	 */
 	public void broadcastMessage(Message message) throws IOException {
-		// TODO Broadcast given message to all nodes
 		for (RemoteNode node : nodesTable.values()) {
 			node.sendMessage(message);
 		}
@@ -151,5 +160,14 @@ public class NodeManager {
 	 */
 	public RemoteNode getNode(UUID nodeID) {
 		return nodesTable.get(nodeID);
+	}
+
+	/**
+	 * Returns a node maintained by the node manager. Successive calls may
+	 * return different nodes.
+	 * @return A RemoteNode currently managed by the NodeManager.
+	 */
+	public RemoteNode getNode() {
+		return (RemoteNode) nodesTable.values().toArray()[0];
 	}
 }

@@ -10,7 +10,7 @@ public class Test2 {
 	public static void main(String[] args) throws IOException {
 		System.out.println("========== Test2 ==========");
 		
-		LocalNode ln = new LocalNode(8081);
+		LocalNode ln = new LocalNode(8081, false);
 		ln.startServer();
 		ln.join();
 		
