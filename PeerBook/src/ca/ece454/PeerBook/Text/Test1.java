@@ -1,17 +1,14 @@
 package ca.ece454.PeerBook.Text;
 
-import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 
 import ca.ece454.PeerBook.FileMetadata;
-import ca.ece454.PeerBook.LocalNode;
 import ca.ece454.PeerBook.Message;
 import ca.ece454.PeerBook.Message.MessageType;
 import ca.ece454.PeerBook.PeerBookFile;
