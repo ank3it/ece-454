@@ -166,7 +166,7 @@ public class PeerBookFile {
 		
 		// Populate the relevant user tag information
 		UserTag tag = new UserTag(
-				"." + fileMetadata.getFilename() + "." + newTagVersion,
+				Util.extractFilename(tagFilepath),
 				tagFilepath,
 				newTagVersion, 
 				System.currentTimeMillis());

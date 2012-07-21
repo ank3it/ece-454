@@ -5,10 +5,9 @@
 package ca.ece454.PeerBook;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.UnknownHostException;
 import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap.SimpleEntry;
@@ -180,16 +179,20 @@ public class LocalNode implements Runnable {
 		FileMetadata newMetadata = queueEntry.getValue().getFileMetadata(0);
 		PeerBookFile file = FileManager.getInstance().getFile(newMetadata.getFilename());
 		
-		if (file == null || file.getFileMetadata().getInternalVersion() >= newMetadata.getInternalVersion())
+		if (file == null) {
+			// File change notification for a newly created file
+			file = new PeerBookFile(newMetadata);
+			FileManager.getInstance().addFile(file);
+		} else if (file.getFileMetadata().getInternalVersion() <= newMetadata.getInternalVersion()) {
+			// Update necessary local metadata information
+			file.getFileMetadata().setInternalVersion(newMetadata.getInternalVersion());
+			file.getFileMetadata().setChecksum(newMetadata.getChecksum());
+			file.getFileMetadata().setLastModified(newMetadata.getLastModified());
+			
+			// Mark local copy, if it exists, as invalid
+			file.getFileMetadata().setValid(false);
+		} else
 			return;
-		
-		// Update necessary local metadata information
-		file.getFileMetadata().setInternalVersion(newMetadata.getInternalVersion());
-		file.getFileMetadata().setChecksum(newMetadata.getChecksum());
-		file.getFileMetadata().setLastModified(newMetadata.getLastModified());
-		
-		// Mark local copy, if it exists, as invalid
-		file.getFileMetadata().setValid(false);
 		
 		// Send download request
 		if (file.getFileMetadata().isKeepLocalCopy()) {
@@ -414,7 +417,7 @@ public class LocalNode implements Runnable {
 		}
 	}
 
-	public OutputStream createFile(String filepath) {		
+	public BufferedOutputStream createFile(String filepath) {		
 		FileMetadata fileMetadata = new FileMetadata(
 				Util.extractFilename(filepath),
 				Util.extractDirectory(filepath), true, true, true, false, 0, 0);
@@ -424,7 +427,7 @@ public class LocalNode implements Runnable {
 		return writeFile(filepath);
 	}
 	
-	public InputStream readFile(String filepath) {
+	public BufferedInputStream readFile(String filepath) {
 		String filename = Util.extractFilename(filepath);
 		PeerBookFile file = FileManager.getInstance().getFile(filename);
 		
@@ -454,8 +457,7 @@ public class LocalNode implements Runnable {
 				return null;
 		}
 		
-		BufferedInputStream input = null;
-		
+		BufferedInputStream input = null;		
 		try {
 			input = file.getBufferedInputStream();
 		} catch (FileNotFoundException e) {
@@ -465,9 +467,22 @@ public class LocalNode implements Runnable {
 		return input;
 	}
 	
-	public OutputStream writeFile(String filepath) {
+	public BufferedOutputStream writeFile(String filepath) {
 		// TODO REturn stream to allow for writing to file
-		return null;
+		String filename = Util.extractFilename(filepath);
+		PeerBookFile file = FileManager.getInstance().getFile(filename);
+		
+		if (file == null)
+			return null;
+		
+		BufferedOutputStream output = null;
+		try {
+			output = file.getBufferedOutputStream();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+		return output;
 	}
 	
 	public void closeFile(String filepath) {
@@ -495,13 +510,13 @@ public class LocalNode implements Runnable {
 	}
 
 	public void deleteFile(String filepath) {
-		// TODO Delete user tagged versions?
-		PeerBookFile file = FileManager.getInstance().getFile(filepath);
+		String filename = Util.extractFilename(filepath);
+		PeerBookFile file = FileManager.getInstance().getFile(filename);
 		
 		if (file == null)
 			return;
 		
-		FileManager.getInstance().deleteFile(filepath);
+		FileManager.getInstance().deleteFile(filename);
 		
 		Message message = new Message(MessageType.REMOVE_FILE_NOTIFICATION, true);
 		message.addFileMetadata(file.getFileMetadata());
@@ -523,7 +538,7 @@ public class LocalNode implements Runnable {
 		Iterator<PeerBookFile> iterator = FileManager.getInstance().getFilesIterator();
 		
 		System.out.println("----- Files currently in PeerBook: -----");
-		System.out.printf("%-30s %-30s %30.30s %20s %10s %n", "FILENAME", "FILEPATH", "VERSION", "AVAILABLE LOCALLY", "READONLY");
+		System.out.printf("%-30s %-50s %30.30s %20s %10s %n", "FILENAME", "FILEPATH", "VERSION", "AVAILABLE LOCALLY", "READONLY");
 		
 		while (iterator.hasNext()) {
 			PeerBookFile file = iterator.next();
@@ -532,7 +547,7 @@ public class LocalNode implements Runnable {
 			if (fileMetadata.isVersionedFile() || fileMetadata.isDeleted())
 				continue;
 			
-			System.out.printf("%-30s %-30s %30.30s %20s %10s %n",
+			System.out.printf("%-30s %-50s %30.30s %20s %10s %n",
 					fileMetadata.getFilename(), fileMetadata.getFilepath(),
 					fileMetadata.getCurrentUserTag(),
 					fileMetadata.isAvailableLocally(),
@@ -544,7 +559,7 @@ public class LocalNode implements Runnable {
 	public void listFileVersions(String filepath) {
 		String filename = Util.extractFilename(filepath);
 		System.out.println("----- Tagged versions for " + filepath + ": -----");
-		System.out.printf("%-30s %-30s %30.30s %20s %10s %n", "FILENAME", "FILEPATH", "VERSION", "AVAILABLE LOCALLY", "READONLY");
+		System.out.printf("%-30s %-50s %30.30s %20s %10s %n", "FILENAME", "FILEPATH", "VERSION", "AVAILABLE LOCALLY", "READONLY");
 		
 		PeerBookFile file = FileManager.getInstance().getFile(filename);
 		
@@ -557,7 +572,7 @@ public class LocalNode implements Runnable {
 			PeerBookFile versionedFile = FileManager.getInstance().getFile(userTag.getFilename());
 			FileMetadata versionedFileMetadata = versionedFile.getFileMetadata();
 			
-			System.out.printf("%-30s %-30s %30.30s %20s %10s %n",
+			System.out.printf("%-30s %-50s %30.30s %20s %10s %n",
 					versionedFileMetadata.getFilename(),
 					versionedFileMetadata.getFilepath(), userTag.getVersion(),
 					versionedFileMetadata.isAvailableLocally(),
