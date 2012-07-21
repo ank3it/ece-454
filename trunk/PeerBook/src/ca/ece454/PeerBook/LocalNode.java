@@ -4,16 +4,23 @@
 
 package ca.ece454.PeerBook;
 
+import java.io.BufferedInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.UnknownHostException;
 import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import ca.ece454.PeerBook.Message.MessageType;
@@ -27,7 +34,9 @@ public class LocalNode implements Runnable {
 	
 	private final Server server;
 	private final BlockingQueue<SimpleEntry<UUID, Message>> messageQueue;
-	private boolean isResourceConstrained;
+	private boolean isResourceConstrained;	
+	private final Lock lock = new ReentrantLock();
+	private final Condition fileAvailable = lock.newCondition();
 
 	private final OnReceiveListener onReceiveCallback = new OnReceiveListener() {
 		@Override
@@ -155,6 +164,7 @@ public class LocalNode implements Runnable {
 		else if (file.getFileMetadata().isAvailableLocally()) {
 			// Construct response message with the data of the file requested for download
 			Message responseMessage = new Message(MessageType.DOWNLOAD_RESPONSE, false);
+			responseMessage.setMessageID(queueEntry.getValue().getMessageID());
 			responseMessage.addFileMetadata(file.getFileMetadata());
 			responseMessage.setFileData(file.read());
 			
@@ -178,9 +188,8 @@ public class LocalNode implements Runnable {
 		file.getFileMetadata().setChecksum(newMetadata.getChecksum());
 		file.getFileMetadata().setLastModified(newMetadata.getLastModified());
 		
-		// Invalidate local copy, if its available
-		if (file.getFileMetadata().isAvailableLocally())
-			file.getFileMetadata().setValid(false);
+		// Mark local copy, if it exists, as invalid
+		file.getFileMetadata().setValid(false);
 		
 		// Send download request
 		if (file.getFileMetadata().isKeepLocalCopy()) {
@@ -342,6 +351,8 @@ public class LocalNode implements Runnable {
 		} catch (NoSuchAlgorithmException e) {
 			log.severe(e.toString());
 		}
+		
+		notify();
 	}
 	// ----- End of message processing -----
 	
@@ -414,20 +425,77 @@ public class LocalNode implements Runnable {
 	}
 	
 	public InputStream readFile(String filepath) {
-		filepath = Util.formatFilepath(filepath);
-		// TODO Return stream to allow for reading of file
-		return null;
+		String filename = Util.extractFilename(filepath);
+		PeerBookFile file = FileManager.getInstance().getFile(filename);
+		
+		if (file == null)
+			return null;
+		
+		// Download file if not available locally
+		if (!file.getFileMetadata().isAvailableLocally()) {
+			Message message = new Message(MessageType.DOWNLOAD_REQUEST, true);
+			message.addFileMetadata(file.getFileMetadata());
+			
+			lock.lock();
+			try {
+				NodeManager.getInstance().broadcastMessage(message);
+				
+				// Wait for file download
+				fileAvailable.await(250, TimeUnit.MILLISECONDS);
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} finally {
+				lock.unlock();
+			}
+			
+			if (!file.getFileMetadata().isAvailableLocally())
+				return null;
+		}
+		
+		BufferedInputStream input = null;
+		
+		try {
+			input = file.getBufferedInputStream();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+		return input;
 	}
 	
 	public OutputStream writeFile(String filepath) {
-		filepath = Util.formatFilepath(filepath);
 		// TODO REturn stream to allow for writing to file
 		return null;
 	}
+	
+	public void closeFile(String filepath) {
+		String filename = Util.extractFilename(filepath);
+		PeerBookFile file = FileManager.getInstance().getFile(filename);
+		
+		try {
+			byte[] newChecksum = file.generateChecksum(Util.CHECKSUM_ALGORITHM);
+			if (!Arrays.equals(newChecksum, file.getFileMetadata().getChecksum())) {
+				file.getFileMetadata().setChecksum(newChecksum);
+				file.getFileMetadata().setInternalVersion(
+						file.getFileMetadata().getInternalVersion() + 1);
+				file.getFileMetadata().setLastModified(System.currentTimeMillis());
+				file.getFileMetadata().setValid(true);
+				
+				Message message = new Message(MessageType.FILE_CHANGE_NOTIFICATION, true);
+				message.addFileMetadata(file.getFileMetadata());
+				NodeManager.getInstance().broadcastMessage(message);
+			}
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	public void deleteFile(String filepath) {
-		filepath = Util.formatFilepath(filepath);
-		
+		// TODO Delete user tagged versions?
 		PeerBookFile file = FileManager.getInstance().getFile(filepath);
 		
 		if (file == null)
@@ -454,7 +522,7 @@ public class LocalNode implements Runnable {
 	public void listFiles() {
 		Iterator<PeerBookFile> iterator = FileManager.getInstance().getFilesIterator();
 		
-		System.out.println("\n----- Files currently in PeerBook: -----");
+		System.out.println("----- Files currently in PeerBook: -----");
 		System.out.printf("%-30s %-30s %30.30s %20s %10s %n", "FILENAME", "FILEPATH", "VERSION", "AVAILABLE LOCALLY", "READONLY");
 		
 		while (iterator.hasNext()) {
@@ -496,18 +564,6 @@ public class LocalNode implements Runnable {
 					versionedFileMetadata.isReadOnly());
 		}
 		System.out.println();
-	}
-
-	public void openFile(String filepath) {
-		filepath = Util.formatFilepath(filepath);
-		// TODO Open file and provide some way to read/write to the file
-		// might need to implement a stream wrapper
-	}
-
-	public void closeFile(String filepath) {
-		filepath = Util.formatFilepath(filepath);
-		// TODO Close the file. Performing the necessary synchronization
-		// operations.
 	}
 	
 	public void tagFile(String filepath) {

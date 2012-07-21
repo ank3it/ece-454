@@ -19,7 +19,7 @@ public class Message implements Serializable {
 		DOWNLOAD_RESPONSE
 	}
 	
-	private final UUID messageID;
+	private UUID messageID;
 	private MessageType messageType;
 	private boolean rebroadcast;
 	private ArrayList<FileMetadata> filesList;
@@ -82,6 +82,10 @@ public class Message implements Serializable {
 		return messageID;
 	}
 	
+	public void setMessageID(UUID messageID) {
+		this.messageID = messageID;
+	}
+
 	public byte[] getFileData() {
 		return fileData;
 	}

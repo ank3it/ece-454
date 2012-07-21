@@ -14,7 +14,6 @@ public class Test3 {
 		ln.addFile("test.jpg");
 		ln.addFile("rubric.txt");
 		ln.addFile("Todo.txt");
-		ln.listFileVersions("test.jpg");
 		ln.tagFile("test.jpg");
 		ln.listFiles();
 		ln.tagFile("test.jpg");

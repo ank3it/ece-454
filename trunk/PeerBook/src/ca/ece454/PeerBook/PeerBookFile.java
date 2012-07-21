@@ -193,6 +193,16 @@ public class PeerBookFile {
 		// Increment internal version number
 		fileMetadata.setInternalVersion(fileMetadata.getInternalVersion() + 1);
 	}
+	
+	public BufferedInputStream getBufferedInputStream() throws FileNotFoundException {
+		File file = new File(fileMetadata.getDirectory() + Util.FILE_SEPERATOR + fileMetadata.getFilename());
+		return new BufferedInputStream(new FileInputStream(file));
+	}
+	
+	public BufferedOutputStream getBufferedOutputStream() throws FileNotFoundException {
+		File file = new File(fileMetadata.getDirectory() + Util.FILE_SEPERATOR + fileMetadata.getFilename());
+		return new BufferedOutputStream(new FileOutputStream(file));
+	}
 
 	// Getters / setters
 	public FileMetadata getFileMetadata() {
