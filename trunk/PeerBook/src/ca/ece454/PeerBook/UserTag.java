@@ -1,6 +1,10 @@
 package ca.ece454.PeerBook;
 
-public class UserTag {
+import java.io.Serializable;
+
+public class UserTag implements Serializable{
+	private static final long serialVersionUID = 6294509086272438760L;
+	
 	private final String filepath;
 	private final int version;
 	private final long tagDate;
