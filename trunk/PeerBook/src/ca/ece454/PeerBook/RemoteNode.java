@@ -31,6 +31,11 @@ public class RemoteNode implements Runnable {
 	public synchronized void sendMessage(Message message) throws IOException {
 		log.info("Sending " + message.getMessageType() + " message");
 		
+		if (!socket.isConnected() || socket.isClosed()) {
+			log.warning("Socket closed, unable to send message");
+			return;
+		}
+		
 		if (out == null)
 			out = new ObjectOutputStream(socket.getOutputStream());
 		

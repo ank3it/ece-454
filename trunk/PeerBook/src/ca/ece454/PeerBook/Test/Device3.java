@@ -13,26 +13,35 @@ public class Device3 {
 	private static final String f12 = "files\\f12.docx";
 	private static final String f31 = "files\\f31.jpg";
 	
+	private static LocalNode ln = null;
+	
 	public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
 		System.out.println("========== Device 3 ==========");
 		
-		LocalNode ln = new LocalNode(8081, true);
+		int port = Integer.parseInt(args[0]);
+		String nodesListFile = args[1]; 
 		
+		ln = new LocalNode(port, true);
+		
+		// Add files
 		ln.addFile(f31);
 		ln.listFiles();
 		
+		// Join network
+		System.out.println("Join network...");
 		waitForInput();
+		ln.join(nodesListFile);
 		
-		ln.join("nodes_list3.txt");
-		
-		waitForInput();
-		
+		// List files
+		System.out.println("List files...");
+		waitForInput();		
 		ln.listFiles();
 		ln.listFileVersions(f12);
 		
+		// Read file
+		System.out.println("Read file f11...");
 		waitForInput();
 		
-		// Read versioned file
 		BufferedInputStream in = ln.readFile(f11);
 		byte[] a = new byte[100];
 		in.read(a, 0, 100);
@@ -40,22 +49,32 @@ public class Device3 {
 		ln.closeFile(f11);
 		System.out.printf("Read from %s version %s: %s%n", f11, 1, new String(a));
 		
-//		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-//		String line;
-//		while ((line = reader.readLine()) != null) {
-//			if (line.equalsIgnoreCase("q")) {
-//				ln.stopServer();
-//				ln.leave();
-//				System.exit(0);
-//			}
-//		}
+		// Read versioned file
+		System.out.println("Reading file f12 version 1");
+		waitForInput();
+		in = ln.readFile(f12, 1);
+		in.read(a, 0, 100);
+		in.close();
 		
-		System.out.println("exiting main()");
+		// List files
+		System.out.println("List files...");
+		waitForInput();		
+		ln.listFiles();
+		
+		// Exit
+		System.out.println("Exit...");
+		waitForInput();
+		ln.leave();
+		System.exit(0);
 	}
 	
 	private static void waitForInput() throws IOException {
 		System.out.println("Press enter to continue...");
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-		reader.read();
+		String line = reader.readLine();
+		if (line.equalsIgnoreCase("q")) {
+			ln.leave();
+			System.exit(0);
+		}
 	}
 }

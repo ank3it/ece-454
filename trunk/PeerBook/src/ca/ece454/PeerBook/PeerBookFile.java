@@ -130,6 +130,10 @@ public class PeerBookFile {
 	 */
 	public byte[] generateChecksum(String algorithm) throws NoSuchAlgorithmException {
 		byte[] fileData = read();
+		
+		if (fileData == null)
+			return null;
+		
 		MessageDigest md = MessageDigest.getInstance(algorithm);
 		return md.digest(fileData);
 	}
