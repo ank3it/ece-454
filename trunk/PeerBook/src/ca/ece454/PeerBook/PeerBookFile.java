@@ -103,25 +103,22 @@ public class PeerBookFile {
 	
 	/**
 	 * Delete the physical file from the system.
-	 * 
-	 * @return True if the file was deleted.
 	 */
-	public boolean delete() {
+	public void delete() {		
+		if (fileMetadata.isAvailableLocally()) {
+			Path path = FileSystems.getDefault().getPath(fileMetadata.getDirectory(), fileMetadata.getFilename());
+			
+			try {
+				Files.delete(path);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
 		// Update file metadata
 		fileMetadata.setAvailableLocally(false);
 		fileMetadata.setInternalVersion(fileMetadata.getInternalVersion() + 1);
 		fileMetadata.setDeleted(true);
-		
-		Path path = FileSystems.getDefault().getPath(fileMetadata.getDirectory(), fileMetadata.getFilename());
-		
-		try {
-			Files.delete(path);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		File file = new File(fileMetadata.getFilepath());
-		return file.delete();
 	}
 	
 	/**
@@ -160,9 +157,11 @@ public class PeerBookFile {
 		String tagFilepath = Util.generateTagFilepath(fileMetadata.getFilepath(), newTagVersion);
 		
 		// Create a copy of the file being tagged
-		Path source = FileSystems.getDefault().getPath(fileMetadata.getDirectory(), fileMetadata.getFilename());
-		Path destination = FileSystems.getDefault().getPath(tagFilepath, "");
-		Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+		if (fileMetadata.isAvailableLocally()) {
+			Path source = FileSystems.getDefault().getPath(fileMetadata.getDirectory(), fileMetadata.getFilename());
+			Path destination = FileSystems.getDefault().getPath(tagFilepath, "");
+			Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+		}
 		
 		// Populate the relevant user tag information
 		UserTag tag = new UserTag(
@@ -174,17 +173,20 @@ public class PeerBookFile {
 		fileMetadata.addUserTag(tag);
 		
 		// Populate metadata for the newly tagged file
-		FileMetadata tagMetadata = new FileMetadata(
-				tag.getFilename(), 
+		FileMetadata tagMetadata = new FileMetadata(tag.getFilename(),
 				Util.extractDirectory(tagFilepath),
-				true, true, true, true, 0, 0);
+				fileMetadata.isAvailableLocally(),
+				fileMetadata.isKeepLocalCopy(), true, true,
+				System.currentTimeMillis(), 0);
 		tagMetadata.setVersionedFile(true);
 		PeerBookFile file = new PeerBookFile(tagMetadata);
 		
-		try {
-			file.updateChecksum(Util.CHECKSUM_ALGORITHM);
-		} catch (NoSuchAlgorithmException e) {
-			log.warning(e.toString());
+		if (tagMetadata.isAvailableLocally()) {
+			try {
+				file.updateChecksum(Util.CHECKSUM_ALGORITHM);
+			} catch (NoSuchAlgorithmException e) {
+				log.warning(e.toString());
+			}
 		}
 		
 		// Add versioned file to the table of managed files

@@ -1,15 +1,15 @@
 [x] Start new thread to communicate with remote node on connect
 [x] Ability to connect to other nodes
 	[x] Test
-[ ] Able receive messages from remote nodes
+[x] Able receive messages from remote nodes
 	[x] Implement
-	[ ] Test
+	[x] Test
 [x] Add nodes list file which will contain a list of all nodes
 [x] Broadcast via flooding
 	[ ] Test
 [x] Ability to download file from remote node
 	[x] Implement
-	[ ] Test
+	[x] Test
 [x] Display logical view of files
 [x] Synchronization
 	 [x] File changes and new files
@@ -27,19 +27,21 @@
 [ ] Download-on-demand
 	[x] Implement
 	[ ] Test
-[ ] Ability to serialize > send > receive > deserialize messages between nodes
+[x] Ability to serialize > send > receive > deserialize messages between nodes
 	[x] Implement 
-	[ ] Test
+	[x] Test
 [x] Replace open operation with read and write?
-[ ] Make sure internal version number gets incremented in all the right places
+[x] Make sure internal version number gets incremented
 [x] Read and write to files
 	[x] Implement
 	[x] Test
 [ ] Custom clone implementations required?
 	[ ] Test!!
 [x] Deal with same internal versions but different file contents
-[ ] Use isResourceConstrained flag to determine isKeepLocal
+[x] Use isResourceConstrained flag to determine isKeepLocal
 [ ] Delete all user tagged versions on delete?
 [ ] Resource constrained devices
 [x] Inform other nodes of a newly created file. Done through file change notification
 [x] Ability to read a specific version of a file
+	[x] Implement
+	[x] Test

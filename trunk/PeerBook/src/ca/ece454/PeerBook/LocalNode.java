@@ -183,8 +183,13 @@ public class LocalNode implements Runnable {
 		
 		if (file == null) {
 			// File change notification for a newly created file
-			file = new PeerBookFile(newMetadata);
+			file = new PeerBookFile((FileMetadata) newMetadata.clone());
 			FileManager.getInstance().addFile(file);
+			
+			if (isResourceConstrained) {
+				file.getFileMetadata().setKeepLocalCopy(false);
+				file.getFileMetadata().setAvailableLocally(false);
+			}
 		} else if (file.getFileMetadata().getInternalVersion() <= newMetadata.getInternalVersion()) {
 			// Update necessary local metadata information
 			file.getFileMetadata().setInternalVersion(newMetadata.getInternalVersion());
@@ -232,14 +237,17 @@ public class LocalNode implements Runnable {
 					file.getFileMetadata().setAvailableLocally(false);
 					file.getFileMetadata().setValid(true);
 					
-					Message downloadRequestMessage = new Message(MessageType.DOWNLOAD_REQUEST, false);
-					downloadRequestMessage.addFileMetadata(remoteFileMetadata);
-					
-					// Send download request to node
-					try {
-						node.sendMessage(downloadRequestMessage);
-					} catch (IOException e) {
-						e.printStackTrace();
+					if (file.getFileMetadata().isKeepLocalCopy()) {
+						boolean rebroadcast = !remoteFileMetadata.isAvailableLocally();
+						Message downloadRequestMessage = new Message(MessageType.DOWNLOAD_REQUEST, rebroadcast);
+						downloadRequestMessage.addFileMetadata(remoteFileMetadata);
+						
+						// Send download request to node
+						try {
+							node.sendMessage(downloadRequestMessage);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 					}
 				} else {
 					// Local file is newer
@@ -260,26 +268,22 @@ public class LocalNode implements Runnable {
 				}
 			} else {
 				// New file which needs to be added to local file manager and
-				// downloaded from remote node
-				FileMetadata localFileMetadata = new FileMetadata(
-						remoteFileMetadata.getFilename(), 
-						remoteFileMetadata.getDirectory(), 
-						false, 
-						true, 
-						true, 
-						false, 
-						remoteFileMetadata.getLastModified(), 
-						remoteFileMetadata.getInternalVersion());
+				// downloaded from remote node				
+				FileMetadata localFileMetadata = (FileMetadata) remoteFileMetadata.clone();
+				localFileMetadata.setKeepLocalCopy(!isResourceConstrained);
+				localFileMetadata.setAvailableLocally(false);
+				fileManager.addFile(new PeerBookFile(localFileMetadata));				
 				
-				fileManager.addFile(new PeerBookFile(localFileMetadata));
-				Message downloadRequestMessage = new Message(MessageType.DOWNLOAD_REQUEST, false);
-				downloadRequestMessage.addFileMetadata(localFileMetadata);
-				
-				// Send download request to node
-				try {
-					node.sendMessage(downloadRequestMessage);
-				} catch (IOException e) {
-					e.printStackTrace();
+				if (localFileMetadata.isKeepLocalCopy()) {
+					Message downloadRequestMessage = new Message(MessageType.DOWNLOAD_REQUEST, false);
+					downloadRequestMessage.addFileMetadata(localFileMetadata);
+					
+					// Send download request to node
+					try {
+						node.sendMessage(downloadRequestMessage);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		}
@@ -314,7 +318,9 @@ public class LocalNode implements Runnable {
 		log.info("Processing new file notification message");
 		
 		FileMetadata newMetadata = queueEntry.getValue().getFileMetadata(0);
-		PeerBookFile file = new PeerBookFile(newMetadata);
+		PeerBookFile file = new PeerBookFile((FileMetadata) newMetadata.clone());
+		file.getFileMetadata().setKeepLocalCopy(!isResourceConstrained);
+		file.getFileMetadata().setAvailableLocally(false);
 		FileManager.getInstance().addFile(file);
 		
 		if (file.getFileMetadata().isKeepLocalCopy()) {
@@ -400,7 +406,7 @@ public class LocalNode implements Runnable {
 	 */
 	private void sendSynchronizationRequest() {
 		if (!NodeManager.getInstance().isConnected()) {
-			log.warning("Not connected to network, failed to send synchronization request");
+			log.warning("Failed to send synchronization request - Not connected to network or no nodes in network, ");
 			return;
 		}
 		
@@ -437,7 +443,8 @@ public class LocalNode implements Runnable {
 	public void addFile(String filepath) {		
 		FileMetadata fileMetadata = new FileMetadata(
 				Util.extractFilename(filepath),
-				Util.extractDirectory(filepath), true, true, true, false, 0, 0);
+				Util.extractDirectory(filepath), true, true, true, false,
+				System.currentTimeMillis(), 0);
 		PeerBookFile file = new PeerBookFile(fileMetadata);
 		
 		if (!file.exists()) {
@@ -465,7 +472,8 @@ public class LocalNode implements Runnable {
 	public BufferedOutputStream createFile(String filepath) {		
 		FileMetadata fileMetadata = new FileMetadata(
 				Util.extractFilename(filepath),
-				Util.extractDirectory(filepath), true, true, true, false, 0, 0);
+				Util.extractDirectory(filepath), true, true, true, false,
+				System.currentTimeMillis(), 0);
 		PeerBookFile file = new PeerBookFile(fileMetadata);
 		FileManager.getInstance().addFile(file);
 		
@@ -489,7 +497,7 @@ public class LocalNode implements Runnable {
 				NodeManager.getInstance().broadcastMessage(message);
 				
 				// Wait for file download
-				fileAvailable.await(250, TimeUnit.MILLISECONDS);
+				fileAvailable.await(10000, TimeUnit.MILLISECONDS);
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (InterruptedException e) {

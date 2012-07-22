@@ -1,13 +1,13 @@
 The rubric is here 
 
 [x] 1. Facility to tag different stable versions (10)
-[ ] 2. File synchronization (25)
-	[ ] (a) while the device is connected to the network and a file gets updated
-	[ ] (b) while the device is disconnected to the network and the file gets updated
-	[ ] (c) If there is a centralized server in the design and the server is disconnected from the network and file is updated.
+[x] 2. File synchronization (25)
+	[x] (a) while the device is connected to the network and a file gets updated
+	[x] (b) while the device is disconnected to the network and the file gets updated
+	[-] (c) If there is a centralized server in the design and the server is disconnected from the network and file is updated.
 
 [x] 3. Facility to provide logical view of the files in the system (20)
-[ ] 4. Facility to retrieve files from the logical view, especially when the file is not available locally. (15)
-[ ] 5. Facility to handle retired and newly added devices. (10)
+[x] 4. Facility to retrieve files from the logical view, especially when the file is not available locally. (15)
+[x] 5. Facility to handle retired and newly added devices. (10)
 [x] 6. Testing to show the system interface APIs (10)
 [x] 7. Mechanism to add and remove files (10)
