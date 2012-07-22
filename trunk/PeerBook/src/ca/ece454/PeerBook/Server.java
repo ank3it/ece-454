@@ -71,7 +71,7 @@ public class Server implements Runnable {
 				NodeManager.getInstance().addNode(node);
 				(new Thread(node)).start();
 			} catch (IOException e) {
-				log.severe(e.toString());
+				e.printStackTrace();
 			}
 		}
 	}

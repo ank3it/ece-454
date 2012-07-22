@@ -12,6 +12,8 @@ public class RemoteNode implements Runnable {
 
 	private final UUID nodeId;
 	private Socket socket;
+	private ObjectOutputStream out = null;
+	private ObjectInputStream in = null;
 	private OnReceiveListener onReceiveListener;
 
 	public RemoteNode(Socket socket) {
@@ -27,15 +29,12 @@ public class RemoteNode implements Runnable {
 	 * @throws IOException
 	 */
 	public synchronized void sendMessage(Message message) throws IOException {
-		ObjectOutputStream out = null;
-
-		try {
+		log.info("Sending " + message.getMessageType() + " message");
+		
+		if (out == null)
 			out = new ObjectOutputStream(socket.getOutputStream());
-			out.writeObject(message);
-		} finally {
-			if (out != null)
-				out.close();
-		}
+		
+		out.writeObject(message);
 	}
 	
 	/**
@@ -50,10 +49,10 @@ public class RemoteNode implements Runnable {
 	@Override
 	public void run() {
 		log.info("Started RemoteNode thread");
-		ObjectInputStream in = null;
 		
 		try {
-			in = new ObjectInputStream(socket.getInputStream());
+			if (in == null)
+				in = new ObjectInputStream(socket.getInputStream());
 			
 			try {
 				while (socket.isConnected() && !socket.isClosed() && !socket.isInputShutdown()) {
@@ -66,9 +65,9 @@ public class RemoteNode implements Runnable {
 				in.close();
 			}
 		} catch (IOException e) {
-			log.severe(e.toString());
+			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			log.severe(e.toString());
+			e.printStackTrace();
 		}
 	}
 

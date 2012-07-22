@@ -41,7 +41,7 @@ public class CircularBuffer<T> {
 	 * @return True if the item is found in the circular buffer.
 	 */
 	public boolean contains(T item) {
-		for (int i = 0; i < buffer.length; i++) {
+		for (int i = 0; i < index; i++) {
 			if (buffer[i].equals(item))
 				return true;
 		}

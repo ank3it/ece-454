@@ -32,14 +32,9 @@ public class PeerBookFile {
 		this.fileMetadata = fileMetadata;
 	}
 	
-	public InputStream getInputStream() {
-		// TODO Modify to work with custom input stream
-		return null;
-	}
-	
-	public OutputStream getOutputStream() {
-		// TODO Modify to work with custom output stream
-		return null;
+	public boolean exists() {
+		Path path = FileSystems.getDefault().getPath(fileMetadata.getDirectory(), fileMetadata.getFilename());
+		return Files.exists(path);
 	}
 	
 	/**
@@ -53,7 +48,7 @@ public class PeerBookFile {
 		if (!fileMetadata.isAvailableLocally())
 			return null;
 		
-		File file = new File(fileMetadata.getDirectory() + Util.FILE_SEPERATOR + fileMetadata.getFilename());
+		File file = new File(fileMetadata.getFilepath());
 		byte[] result = new byte[(int)file.length()];
 				
 		try {
@@ -89,10 +84,7 @@ public class PeerBookFile {
 	 * @param data
 	 *            The data to be written to file in the form of a byte array.
 	 */
-	public void write(byte[] data) {
-		if (fileMetadata.isReadOnly())
-			return;
-		
+	public void write(byte[] data) {		
 		try {
 			OutputStream output = null;
 			
@@ -119,6 +111,14 @@ public class PeerBookFile {
 		fileMetadata.setAvailableLocally(false);
 		fileMetadata.setInternalVersion(fileMetadata.getInternalVersion() + 1);
 		fileMetadata.setDeleted(true);
+		
+		Path path = FileSystems.getDefault().getPath(fileMetadata.getDirectory(), fileMetadata.getFilename());
+		
+		try {
+			Files.delete(path);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
 		File file = new File(fileMetadata.getFilepath());
 		return file.delete();
@@ -195,12 +195,15 @@ public class PeerBookFile {
 	}
 	
 	public BufferedInputStream getBufferedInputStream() throws FileNotFoundException {
-		File file = new File(fileMetadata.getDirectory() + Util.FILE_SEPERATOR + fileMetadata.getFilename());
+		File file = new File(fileMetadata.getFilepath());
 		return new BufferedInputStream(new FileInputStream(file));
 	}
 	
 	public BufferedOutputStream getBufferedOutputStream() throws FileNotFoundException {
-		File file = new File(fileMetadata.getDirectory() + Util.FILE_SEPERATOR + fileMetadata.getFilename());
+		if (fileMetadata.isReadOnly())
+			return null;
+		
+		File file = new File(fileMetadata.getFilepath());
 		return new BufferedOutputStream(new FileOutputStream(file));
 	}
 

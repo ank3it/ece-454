@@ -2,7 +2,9 @@ package ca.ece454.PeerBook;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Scanner;
@@ -54,7 +56,7 @@ public class NodeManager {
 	 * @throws IOException
 	 * @throws UnknownHostException
 	 */
-	public void connectToNodes(String nodesListFilepath)
+	public void connectToNodes(String nodesListFilepath, OnReceiveListener onReceiveListener)
 			throws UnknownHostException, IOException {
 		log.info("Attempting to connect to network");
 
@@ -66,9 +68,13 @@ public class NodeManager {
 
 				log.info("Connecting to " + host + ":" + port);
 
-				Socket socket = new Socket(host, port);
+				Socket socket = new Socket();
+				SocketAddress endpoint = new InetSocketAddress(host, port);
+				socket.connect(endpoint, 2000);
+				socket.setKeepAlive(true);
 				if (socket.isConnected()) {
 					RemoteNode node = new RemoteNode(socket);
+					node.setOnReceiveListener(onReceiveListener);
 					addNode(node);
 					(new Thread(node)).start();
 				}
