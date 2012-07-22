@@ -437,6 +437,7 @@ public class LocalNode implements Runnable {
 	}
 
 	public void leave() {
+		stopServer();
 		NodeManager.getInstance().disconnectFromNodes();
 	}
 

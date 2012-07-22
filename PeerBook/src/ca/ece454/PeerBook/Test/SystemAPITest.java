@@ -63,7 +63,6 @@ public class SystemAPITest {
 		byte[] a = new byte[100];
 		in.read(a, 0, 100);
 		in.close();
-		ln.closeFile(f11);
 		System.out.printf("Read from %s version %s: %s%n", f11, 1, new String(a));
 		
 		System.out.println("Tagging " + f11 + " as stable version again");
