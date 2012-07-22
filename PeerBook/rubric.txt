@@ -9,5 +9,5 @@ The rubric is here
 [x] 3. Facility to provide logical view of the files in the system (20)
 [ ] 4. Facility to retrieve files from the logical view, especially when the file is not available locally. (15)
 [ ] 5. Facility to handle retired and newly added devices. (10)
-[ ] 6. Testing to show the system interface APIs (10)
-[ ] 7. Mechanism to add and remove files (10)
+[x] 6. Testing to show the system interface APIs (10)
+[x] 7. Mechanism to add and remove files (10)

@@ -29,8 +29,6 @@ import ca.ece454.PeerBook.Util.Util;
 public class LocalNode implements Runnable {
 	private static final Logger log = Logger.getLogger(LocalNode.class.getName());
 	
-	private static final String NODES_LIST_FILEPATH = "nodes_list.txt";
-	
 	private final Server server;
 	private final BlockingQueue<SimpleEntry<UUID, Message>> messageQueue;
 	private boolean isResourceConstrained;	
@@ -40,7 +38,7 @@ public class LocalNode implements Runnable {
 	private final OnReceiveListener onReceiveCallback = new OnReceiveListener() {
 		@Override
 		public void onReceive(UUID nodeID, Message message) {
-			log.info("onReceive(): Received message, adding to message queue");
+			log.info("Received message, adding to message queue");
 			try {
 				messageQueue.put(new SimpleEntry<UUID, Message>(nodeID, message));
 			} catch (InterruptedException e) {
@@ -155,6 +153,8 @@ public class LocalNode implements Runnable {
 	}
 
 	private void processDownloadRequest(SimpleEntry<UUID, Message> queueEntry) {
+		log.info("Processing download request message");
+		
 		FileMetadata metadata = queueEntry.getValue().getFileMetadata(0);
 		PeerBookFile file = FileManager.getInstance().getFile(metadata.getFilename());
 		
@@ -170,12 +170,14 @@ public class LocalNode implements Runnable {
 			try {
 				NodeManager.getInstance().getNode(queueEntry.getKey()).sendMessage(responseMessage);
 			} catch (IOException e) {
-				log.severe(e.toString());
+				e.printStackTrace();
 			}
 		}
 	}
 	
 	private void processFileChangeNotification(SimpleEntry<UUID, Message> queueEntry) {
+		log.info("Processing file change notification message");
+		
 		FileMetadata newMetadata = queueEntry.getValue().getFileMetadata(0);
 		PeerBookFile file = FileManager.getInstance().getFile(newMetadata.getFilename());
 		
@@ -202,12 +204,14 @@ public class LocalNode implements Runnable {
 			try {
 				NodeManager.getInstance().getNode(queueEntry.getKey()).sendMessage(responseMessage);
 			} catch (IOException e) {
-				log.severe(e.toString());
+				e.printStackTrace();
 			}
 		}
 	}
 	
 	private void processSyncrhonizationResponse(SimpleEntry<UUID, Message> queueEntry) {
+		log.info("Processing synchronization response message");
+		
 		FileManager fileManager = FileManager.getInstance();
 		RemoteNode node = NodeManager.getInstance().getNode(queueEntry.getKey());
 		Iterator<FileMetadata> iterator = queueEntry.getValue().getFilesListIterator();
@@ -235,7 +239,7 @@ public class LocalNode implements Runnable {
 					try {
 						node.sendMessage(downloadRequestMessage);
 					} catch (IOException e) {
-						log.severe(e.toString());
+						e.printStackTrace();
 					}
 				} else {
 					// Local file is newer
@@ -251,7 +255,7 @@ public class LocalNode implements Runnable {
 					try {
 						NodeManager.getInstance().broadcastMessage(fileChangeMessage);
 					} catch (IOException e) {
-						log.severe(e.toString());
+						e.printStackTrace();
 					}
 				}
 			} else {
@@ -275,16 +279,40 @@ public class LocalNode implements Runnable {
 				try {
 					node.sendMessage(downloadRequestMessage);
 				} catch (IOException e) {
-					log.severe(e.toString());
+					e.printStackTrace();
 				}
 			}
 		}
 		
-		// Delete all remaining invalid files
-		fileManager.deleteInvalidFiles();
+		notifyNetworkOfNewFiles();
+	}
+	
+	private void notifyNetworkOfNewFiles() {
+		// All remaining invalid files are new files which need to be propagated
+		// to through the network
+		Iterator<PeerBookFile> iterator = FileManager.getInstance().getFilesIterator();
+		
+		while (iterator.hasNext()) {
+			PeerBookFile file = iterator.next();
+			
+			if (!file.getFileMetadata().isValid()) {
+				file.getFileMetadata().setValid(true);
+				
+				Message newFileMessage = new Message(MessageType.NEW_FILE_NOTIFICATION, true);
+				newFileMessage.addFileMetadata(file.getFileMetadata());
+				
+				try {
+					NodeManager.getInstance().broadcastMessage(newFileMessage);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 	
 	private void processNewFileNotification(SimpleEntry<UUID, Message> queueEntry) {
+		log.info("Processing new file notification message");
+		
 		FileMetadata newMetadata = queueEntry.getValue().getFileMetadata(0);
 		PeerBookFile file = new PeerBookFile(newMetadata);
 		FileManager.getInstance().addFile(file);
@@ -297,23 +325,25 @@ public class LocalNode implements Runnable {
 			try {
 				NodeManager.getInstance().getNode(queueEntry.getKey()).sendMessage(responseMessage);
 			} catch (IOException e) {
-				log.severe(e.toString());
+				e.printStackTrace();
 			}
 		}
 	}
 	
 	private void processRemoveFileNotification(SimpleEntry<UUID, Message> queueEntry) {
+		log.info("Processing remove file notification message");
+		
 		FileMetadata remoteFileMetadata = queueEntry.getValue().getFileMetadata(0);
 		PeerBookFile file = FileManager.getInstance().getFile(remoteFileMetadata.getFilename());
 		FileMetadata localFileMetadata = file.getFileMetadata();
 		
-		if (remoteFileMetadata.getInternalVersion() > localFileMetadata.getInternalVersion()) {
+		if (remoteFileMetadata.getInternalVersion() > localFileMetadata.getInternalVersion())
 			FileManager.getInstance().deleteFile(localFileMetadata.getFilename());
-			FileManager.getInstance().removeFile(file);
-		}
 	}
 	
 	private void processSynchronizationRequest(SimpleEntry<UUID, Message> queueEntry) {
+		log.info("Processing synchronization request message");
+		
 		Message responseMessage = new Message(MessageType.SYNCHRONIZATION_RESPONSE, false);
 		Iterator<PeerBookFile> iterator = FileManager.getInstance().getFilesIterator();
 		
@@ -324,11 +354,13 @@ public class LocalNode implements Runnable {
 		try {
 			NodeManager.getInstance().getNode(queueEntry.getKey()).sendMessage(responseMessage);
 		} catch (IOException e) {
-			log.severe(e.toString());
+			e.printStackTrace();
 		}
 	}
 	
 	private void processTagNotification(SimpleEntry<UUID, Message> queueEntry) {
+		log.info("Processing tag notification message");
+		
 		FileMetadata remoteFileMetadata = queueEntry.getValue().getFileMetadata(0);
 		PeerBookFile file = FileManager.getInstance().getFile(remoteFileMetadata.getFilename());
 		
@@ -336,12 +368,14 @@ public class LocalNode implements Runnable {
 			try {
 				file.tag();
 			} catch (IOException e) {
-				log.severe(e.toString());
+				e.printStackTrace();
 			}
 		}
 	}
 	
 	private void processDownloadResponse(SimpleEntry<UUID, Message> queueEntry) {
+		log.info("Processing download response message");
+		
 		FileMetadata remoteFileMetadata = queueEntry.getValue().getFileMetadata(0);
 		PeerBookFile file = FileManager.getInstance().getFile(remoteFileMetadata.getFilename());
 		
@@ -355,7 +389,9 @@ public class LocalNode implements Runnable {
 			log.severe(e.toString());
 		}
 		
-		notify();
+		lock.lock();
+		fileAvailable.signal();
+		lock.unlock();
 	}
 	// ----- End of message processing -----
 	
@@ -379,9 +415,12 @@ public class LocalNode implements Runnable {
 	}
 
 	// ----- Public interface -----
-	public void join() {
+	public void join(String nodesListFile) {
+		startServer();
+		new Thread(this).start();
+		
 		try {
-			NodeManager.getInstance().connectToNodes(NODES_LIST_FILEPATH);
+			NodeManager.getInstance().connectToNodes(nodesListFile, onReceiveCallback);
 		} catch (UnknownHostException e) {
 			log.severe(e.toString());
 		} catch (IOException e) {
@@ -400,6 +439,12 @@ public class LocalNode implements Runnable {
 				Util.extractFilename(filepath),
 				Util.extractDirectory(filepath), true, true, true, false, 0, 0);
 		PeerBookFile file = new PeerBookFile(fileMetadata);
+		
+		if (!file.exists()) {
+			log.warning(file.getFileMetadata().getFilepath() + " does not exist. Failed to add file");
+			return;
+		}
+		
 		FileManager.getInstance().addFile(file);
 		
 		try {
@@ -467,8 +512,20 @@ public class LocalNode implements Runnable {
 		return input;
 	}
 	
+	public BufferedInputStream readFile(String filepath, int version) {
+		String filename = Util.extractFilename(filepath);
+		PeerBookFile file = FileManager.getInstance().getFile(filename);
+		
+		if (file == null)
+			return null;
+		
+		String versionedFilepath = file.getFileMetadata()
+				.getUserTaggedVersions().get(version - 1).getFilepath();
+		
+		return readFile(versionedFilepath);
+	}
+	
 	public BufferedOutputStream writeFile(String filepath) {
-		// TODO REturn stream to allow for writing to file
 		String filename = Util.extractFilename(filepath);
 		PeerBookFile file = FileManager.getInstance().getFile(filename);
 		
@@ -527,10 +584,6 @@ public class LocalNode implements Runnable {
 			} catch (IOException e) {
 				log.severe(e.toString());
 			}
-			
-			// Remove from file manger if connected to network, otherwise keep
-			// for synchronization purposes
-			FileManager.getInstance().removeFile(file);
 		}
 	}
 

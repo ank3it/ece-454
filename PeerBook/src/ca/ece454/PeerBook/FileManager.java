@@ -3,7 +3,7 @@ package ca.ece454.PeerBook;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class FileManager {
+public class FileManager {	
 	private static FileManager instance;
 
 	private HashMap<String, PeerBookFile> filesTable;
@@ -35,7 +35,7 @@ public class FileManager {
 	 * @param file
 	 *            The file to be added.
 	 */
-	public void addFile(PeerBookFile file) {
+	public void addFile(PeerBookFile file) {		
 		filesTable.put(file.getFileMetadata().getFilename(), file);
 	}
 
@@ -45,9 +45,9 @@ public class FileManager {
 	 * @param file
 	 *            The file to be removed.
 	 */
-	public void removeFile(PeerBookFile file) {
-		filesTable.remove(file.getFileMetadata().getFilename());
-	}
+//	public void removeFile(PeerBookFile file) {
+//		filesTable.remove(file.getFileMetadata().getFilename());
+//	}
 	
 	/**
 	 * Deletes the given file if it exists. The file is not removed from the
@@ -106,14 +106,14 @@ public class FileManager {
 	/**
 	 * Removes any file marked as deleted from the file manager.
 	 */
-	public void removeDeletedFiles() {
-		Iterator<PeerBookFile> iterator = filesTable.values().iterator();
-
-		while (iterator.hasNext()) {
-			PeerBookFile file = iterator.next();
-			if (!file.getFileMetadata().isDeleted()) {
-				iterator.remove();
-			}
-		}
-	}
+//	public void removeDeletedFiles() {
+//		Iterator<PeerBookFile> iterator = filesTable.values().iterator();
+//
+//		while (iterator.hasNext()) {
+//			PeerBookFile file = iterator.next();
+//			if (!file.getFileMetadata().isDeleted()) {
+//				iterator.remove();
+//			}
+//		}
+//	}
 }

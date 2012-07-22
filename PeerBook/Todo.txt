@@ -11,18 +11,18 @@
 	[x] Implement
 	[ ] Test
 [x] Display logical view of files
-[ ] Synchronization
+[x] Synchronization
 	 [x] File changes and new files
 	 [x] Deleted files
 	 [x] File versions? Should be handled in serialization of file metadata
-	 [ ] Test
+	 [x] Test
 [x] Ability to tag files
 	[x] Test
 [x] Add files
 	[x] Test
-[ ] Remove files
+[x] Remove files
 	[x] Implement
-	[ ] Test
+	[x] Test
 [x] Only delete file if connected to the network
 [ ] Download-on-demand
 	[x] Implement
@@ -32,9 +32,9 @@
 	[ ] Test
 [x] Replace open operation with read and write?
 [ ] Make sure internal version number gets incremented in all the right places
-[ ] Read and write to files
+[x] Read and write to files
 	[x] Implement
-	[ ] Test
+	[x] Test
 [ ] Custom clone implementations required?
 	[ ] Test!!
 [x] Deal with same internal versions but different file contents
@@ -42,3 +42,4 @@
 [ ] Delete all user tagged versions on delete?
 [ ] Resource constrained devices
 [x] Inform other nodes of a newly created file. Done through file change notification
+[x] Ability to read a specific version of a file
