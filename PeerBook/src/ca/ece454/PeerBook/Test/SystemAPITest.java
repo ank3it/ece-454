@@ -58,6 +58,14 @@ public class SystemAPITest {
 		out.close();
 		ln.closeFile(f11);
 		
+		// Read versioned file
+		BufferedInputStream in = ln.readFile(f11, 1);
+		byte[] a = new byte[100];
+		in.read(a, 0, 100);
+		in.close();
+		ln.closeFile(f11);
+		System.out.printf("Read from %s version %s: %s%n", f11, 1, new String(a));
+		
 		System.out.println("Tagging " + f11 + " as stable version again");
 		waitForInput();
 		
@@ -71,12 +79,12 @@ public class SystemAPITest {
 		waitForInput();
 		
 		// Reading from abc.txt
-		BufferedInputStream in = ln.readFile(f11);
+		in = ln.readFile(f11);
 		byte[] b = new byte[100];
 		in.read(b, 0, 100);
 		in.close();
 		ln.closeFile(f11);
-		System.out.printf("Read from %s: %s", f11, new String(b));
+		System.out.printf("Read from %s: %s%n", f11, new String(b));
 	}
 	
 	private static void waitForInput() throws IOException {
